@@ -7,7 +7,7 @@ rawdata = open(sys.argv[1], "r").read()
 rules=r'''
 lines: obj*
 
-obj: (list|atom|metadata|deref|hashmap|vector|keyword|quote|quasiquote|spliceunquote|unquote|python|COMMA)
+?obj: (list|atom|metadata|deref|hashmap|vector|keyword|quote|quasiquote|spliceunquote|unquote|python|COMMA)
 
 list: "(" obj* ")"
 metadata: "^" obj obj
@@ -21,14 +21,14 @@ unquote: "~" obj
 spliceunquote: "~@" obj
 python: "\." name
 
-atom: name
+?atom: name
      | COMMENT
      | NUMBER -> number
      | string
-     | "nil" -> is_nil
-     | "null" -> is_null
-     | "false" -> is_false
-     | "true" -> is_true
+     | "nil" -> nil
+     | BOOLEAN -> boolean
+
+BOOLEAN: /true|false/
 
 string: ESCAPED_STRING
 name: /[^"^.@~`\[\]:{}0-9\s();][^"^@~`\[\]:{}0-9\s();]*/
@@ -47,8 +47,11 @@ l = Lark(rules, parser='lalr', start="lines")
 
 class ToAst(Transformer):
     lines = list
-    expr = list
+    list = list
 
+
+    nil = lambda _,x: { "type": "nil", "value": None  }
+    boolean = lambda _,x: { "type": "boolean", "value": True if x[0].value == "true" else False  }
     name = lambda _,x: { "type": "name", "value": x[0].value }
     string = lambda _,x: { "type": "string", "value": eval(x[0].value) }
     number = lambda _,x: {
