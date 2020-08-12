@@ -31,7 +31,7 @@ atom: name
      | "true" -> is_true
 
 string: ESCAPED_STRING
-name: /[^"^.@~`\[\]:{}0-9\s();]+/
+name: /[^"^.@~`\[\]:{}0-9\s();][^"^@~`\[\]:{}0-9\s();]*/
 COMMENT: /;.*\n/
 COMMA: ","
 
