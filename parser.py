@@ -84,10 +84,9 @@ display_funcs = {
 def display(x):
     if isinstance(x, list):
         return "({})".format(" ".join([display(i) for i in x]))
-    else:
+    if isinstance(x, dict):
         return display_funcs[x["type"]](x["value"])
 
 def parse(data):
     tree = l.parse(data)
     return ToAst().transform(tree)
-
