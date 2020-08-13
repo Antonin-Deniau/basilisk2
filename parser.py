@@ -76,7 +76,7 @@ display_funcs = {
     "name": lambda x: x,
     "string": lambda x: repr(x),
     "number": lambda x: repr(x),
-    "hashmap": lambda x: "{{{}}}".format(" ".join(["{}:{}".format(display(i[0]), display(i[1])) for i in x])),
+    "hashmap": lambda x: "{{{}}}".format(" ".join(["{}: {}".format(display(i[0]), display(i[1])) for i in x])),
     "keyword": lambda x: ":{}".format(x),
     "vector": lambda x: "[%s]" % " ".join([display(i) for i in x]),
 }

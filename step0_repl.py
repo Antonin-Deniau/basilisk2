@@ -39,12 +39,12 @@ def evl(ast, env):
             return ast
         else:
             ev = eval_ast(ast, env)
-            return ev[0](*ev[1::])
+            return format_type(ev[0](*ev[1::]))
     else:
         return eval_ast(ast, env)
 
 def prnt(e):
-    sys.stdout.write(parser.display(e))
+    sys.stdout.write(" ".join([parser.display(s) for s in e]))
     sys.stdout.write("\n")
 
 def rep(env):
@@ -54,14 +54,6 @@ def rep(env):
 
 def eval_ast(ast, env):
     if isinstance(ast, dict):
-        if ast["type"] == "number":
-            return ast["value"]
-        if ast["type"] == "string":
-            return ast["value"]
-        if ast["type"] == "vector":
-            return [evl(a, env) for a in ast["value"]]
-        if ast["type"] == "hashmap":
-            return { k[0]["value"]: evl(k[1], env) for k in ast["value"]}
         if ast["type"] == "name":
             if ast["value"] in env:
                 return env[ast["value"]]
