@@ -9,7 +9,7 @@ lines: obj*
 list: "(" obj* ")"
 metadata: "^" obj obj
 deref: "@" obj
-hashmap: "{" ((string|keyword|quote) obj)* "}"
+hashmap: "{" (keyword obj)* "}"
 vector: "[" obj* "]"
 keyword: ":" TOKEN
 quote: "'" obj
@@ -61,7 +61,7 @@ class ToAst(Transformer):
     metadata = lambda _,x: [{"type": "name", "value": "with-meta" }, x[0], x[1] ]
     hashmap = lambda _,x: {
             "type": "hashmap",
-            "value": [ [x[0], x[1]] for i in zip(list(x[::2]), list(x[1::2])) ],
+            "value": { i[0]["value"]: i[1] for i in zip(list(x[::2]), list(x[1::2])) },
     }
     keyword = lambda _,x: {"type": "keyword", "value": x[0].value }
     vector = lambda _,x: {"type": "vector", "value": x }
@@ -76,7 +76,7 @@ display_funcs = {
     "name": lambda x: x,
     "string": lambda x: repr(x),
     "number": lambda x: repr(x),
-    "hashmap": lambda x: "{{{}}}".format(" ".join(["{}: {}".format(display(i[0]), display(i[1])) for i in x])),
+    "hashmap": lambda x: "{{{}}}".format(" ".join(["{} {}".format(":{}".format(k), display(v)) for k,v in x.items()])),
     "keyword": lambda x: ":{}".format(x),
     "vector": lambda x: "[%s]" % " ".join([display(i) for i in x]),
 }

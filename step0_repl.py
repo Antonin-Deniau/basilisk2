@@ -1,7 +1,10 @@
+#!/usr/bin/env python
 import sys, parser
 import atexit
 import os
 import readline
+import lark
+
 histfile = os.path.join(os.path.expanduser("~"), ".python_history")
 
 try:
@@ -29,7 +32,7 @@ def format_type(data):
     if isinstance(data, int):
         return { "type": "number", "value": data }
     if isinstance(data, dict):
-        return { "type": "hashmap", "value": { format_type(k): format_type(v) for k,v in data.items()} }
+        return { "type": "hashmap", "value": { k: format_type(v) for k,v in data.items()} }
     if isinstance(data, str):
         return { "type": "string", "value": data }
 
@@ -39,12 +42,12 @@ def evl(ast, env):
             return ast
         else:
             ev = eval_ast(ast, env)
-            return format_type(ev[0](*ev[1::]))
-    else:
-        return eval_ast(ast, env)
+            return ev[0](*ev[1::])
+
+    return eval_ast(ast, env)
 
 def prnt(e):
-    sys.stdout.write(" ".join([parser.display(s) for s in e]))
+    sys.stdout.write(" ".join([parser.display(format_type(s)) for s in e]))
     sys.stdout.write("\n")
 
 def rep(env):
@@ -60,10 +63,16 @@ def eval_ast(ast, env):
             else:
                 raise Exception("Symbol not found: {}".format(ast["value"]))
 
+        if ast["type"] == "vector":
+            return [evl(a, env) for a in ast["value"]]
+
+        if ast["type"] == "hashmap":
+            return { k: evl(v, env) for k,v in ast["value"].items() }
+
     if isinstance(ast, list):
         return [evl(x, env) for x in ast]
 
-    return ast
+    return ast["value"]
 
 repl_env = {
         '+': lambda a,b: a+b,
@@ -73,4 +82,7 @@ repl_env = {
 }
 
 while True:
-    rep(repl_env)
+    try:
+        rep(repl_env)
+    except lark.exceptions.UnexpectedToken as e:
+        print(e)
