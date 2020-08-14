@@ -39,7 +39,7 @@ string: ESCAPED_STRING
 NIL.5: "nil"
 BOOLEAN.5: /true|false/
 
-COMMENT: /;.*\n/
+COMMENT: /;.*(?=(\n|$))/
 COMMA: ","
 
 TOKEN: /[^"^.@~`\[\]:{}0-9\s,();][^"^@~`\[\]:{}0-9\s();]*/
