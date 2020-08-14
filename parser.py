@@ -4,7 +4,24 @@ from lark import Lark, Transformer, Token
 rules=r'''
 lines: obj*
 
-?obj: (list|atom|metadata|deref|hashmap|vector|keyword|quote|quasiquote|spliceunquote|unquote|python|COMMA)
+?obj: list
+    | metadata
+    | deref
+    | hashmap
+    | vector
+    | keyword
+    | quote
+    | quasiquote
+    | spliceunquote
+    | unquote
+    | python
+    | COMMA
+    | TOKEN -> name
+    | COMMENT
+    | NUMBER -> number
+    | BOOLEAN -> boolean
+    | string
+    | NIL -> nil
 
 list: "(" obj* ")"
 metadata: "^" obj obj
@@ -17,18 +34,11 @@ quasiquote: "`" obj
 unquote: "~" obj
 spliceunquote: "~@" obj
 python: "\." TOKEN
-
-?atom: name
-     | COMMENT
-     | NUMBER -> number
-     | string
-     | "nil" -> nil
-     | BOOLEAN -> boolean
-
-BOOLEAN: /true|false/
-
 string: ESCAPED_STRING
-name: TOKEN
+
+NIL.5: "nil"
+BOOLEAN.5: /true|false/
+
 COMMENT: /;.*\n/
 COMMA: ","
 
@@ -71,27 +81,30 @@ class Keyword:
         return a.name == b.name
 
 class ToAst(Transformer):
-    lines = tuple
+    lines = list
     list = tuple
+    vector = list
 
     nil = lambda _,x: None
     number = lambda _,x: float(x[0].value) if x[0].value.find(".") != -1 else int(x[0].value) 
     boolean = lambda _,x: x[0] == "true"
     name = lambda _,x: Name(x[0].value)
     string = lambda _,x: eval(x[0])
-    deref = lambda _,x: tuple(Name("deref"), *x )
-    metadata = lambda _,x: tuple(Name("with-meta"), x[0], x[1])
+    deref = lambda _,x: tuple([Name("deref"), *x])
+    metadata = lambda _,x: tuple([Name("with-meta"), x[0], x[1]])
     hashmap = lambda _,x: { i[0]: i[1] for i in zip(list(x[::2]), list(x[1::2])) }
     keyword = lambda _,x: Keyword(x[0].value)
-    vector = lambda _,x: x
-    quote = lambda _,x: tuple(Name("quote"), *x)
-    quasiquote = lambda _,x: tuple(Name("quasiquote"), *x)
-    unquote = lambda _,x: tuple(Name("unquote"), *x)
-    spliceunquote = lambda _,x: tuple(Name("spliceunquote"), *x)
+    quote = lambda _,x: tuple([Name("quote"), *x])
+    quasiquote = lambda _,x: tuple([Name("quasiquote"), *x])
+    unquote = lambda _,x: tuple([Name("unquote"), *x])
+    spliceunquote = lambda _,x: tuple([Name("spliceunquote"), *x])
 
 def display(x):
+    if isinstance(x, bool):
+        return "true" if x is True else "false"
+
     if isinstance(x, tuple):
-        return "({})".format([display(r) for r in x])
+        return "({})".format(" ".join([display(r) for r in x]))
 
     if isinstance(x, int):
         return repr(x)
@@ -112,7 +125,10 @@ def display(x):
         return ":{}".format(x.name)
 
     if isinstance(x, Name):
-        return x
+        return x.name
+
+    if x is None:
+        return "nil"
 
     return x
 
@@ -121,5 +137,5 @@ def parse(data):
     return ToAst().transform(tree)
 
 if __name__ == "__main__":
-    [print(a) for a in parse(open("./syntax.cr", "r").read())]
+    [print(display(a)) for a in parse(open("./syntax.cr", "r").read())]
 
