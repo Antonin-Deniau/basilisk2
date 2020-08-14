@@ -9,7 +9,7 @@ lines: obj*
 list: "(" obj* ")"
 metadata: "^" obj obj
 deref: "@" obj
-hashmap: "{" (keyword obj)* "}"
+hashmap: "{" ((keyword|string) obj)* "}"
 vector: "[" obj* "]"
 keyword: ":" TOKEN
 quote: "'" obj
@@ -44,49 +44,82 @@ TOKEN: /[^"^.@~`\[\]:{}0-9\s,();][^"^@~`\[\]:{}0-9\s();]*/
 
 l = Lark(rules, parser='lalr', start="lines")
 
+class Name:
+    def __init__(self, name):
+        self.name = name
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __repr__(self):
+        return self.name
+
+    def __eq__(self, a, b):
+        return a.name == b.name
+
+class Keyword:
+    def __init__(self, name):
+        self.name = name
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __repr__(self):
+        return self.name
+
+    def __eq__(self, a, b):
+        return a.name == b.name
+
 class ToAst(Transformer):
-    lines = list
-    list = list
+    lines = tuple
+    list = tuple
 
-
-    nil = lambda _,x: { "type": "nil", "value": None  }
-    boolean = lambda _,x: { "type": "boolean", "value": True if x[0].value == "true" else False  }
-    name = lambda _,x: { "type": "name", "value": x[0].value }
-    string = lambda _,x: { "type": "string", "value": eval(x[0].value) }
-    number = lambda _,x: {
-            "type": "number",
-            "value":  float(x[0].value) if x[0].value.find(".") != -1 else int(x[0].value),
-    }
-    deref = lambda _,x: [{"type": "name", "value": "deref" }, *x ]
-    metadata = lambda _,x: [{"type": "name", "value": "with-meta" }, x[0], x[1] ]
-    hashmap = lambda _,x: {
-            "type": "hashmap",
-            "value": { i[0]["value"]: i[1] for i in zip(list(x[::2]), list(x[1::2])) },
-    }
-    keyword = lambda _,x: {"type": "keyword", "value": x[0].value }
-    vector = lambda _,x: {"type": "vector", "value": x }
-    quote = lambda _,x: [{"type": "name", "value": "quote"}, *x]
-    quasiquote = lambda _,x: [{"type": "name", "value": "quasiquote"}, *x]
-    unquote = lambda _,x: [{"type": "name", "value": "unquote"}, *x]
-    spliceunquote = lambda _,x: [{"type": "name", "value": "spliceunquote"}, *x]
-
-display_funcs = {
-    "nil": lambda x: "nil",
-    "boolean": lambda x: "true" if x is True else "false",
-    "name": lambda x: x,
-    "string": lambda x: repr(x),
-    "number": lambda x: repr(x),
-    "hashmap": lambda x: "{{{}}}".format(" ".join(["{} {}".format(":{}".format(k), display(v)) for k,v in x.items()])),
-    "keyword": lambda x: ":{}".format(x),
-    "vector": lambda x: "[%s]" % " ".join([display(i) for i in x]),
-}
+    nil = lambda _,x: None
+    number = lambda _,x: float(x[0].value) if x[0].value.find(".") != -1 else int(x[0].value) 
+    boolean = lambda _,x: x[0] == "true"
+    name = lambda _,x: Name(x[0].value)
+    string = lambda _,x: eval(x[0])
+    deref = lambda _,x: tuple(Name("deref"), *x )
+    metadata = lambda _,x: tuple(Name("with-meta"), x[0], x[1])
+    hashmap = lambda _,x: { i[0]: i[1] for i in zip(list(x[::2]), list(x[1::2])) }
+    keyword = lambda _,x: Keyword(x[0].value)
+    vector = lambda _,x: x
+    quote = lambda _,x: tuple(Name("quote"), *x)
+    quasiquote = lambda _,x: tuple(Name("quasiquote"), *x)
+    unquote = lambda _,x: tuple(Name("unquote"), *x)
+    spliceunquote = lambda _,x: tuple(Name("spliceunquote"), *x)
 
 def display(x):
+    if isinstance(x, tuple):
+        return "({})".format([display(r) for r in x])
+
+    if isinstance(x, int):
+        return repr(x)
+
+    if isinstance(x, float):
+        return repr(x)
+
+    if isinstance(x, str):
+        return repr(x)
+
     if isinstance(x, list):
-        return "({})".format(" ".join([display(i) for i in x]))
+        return "[{}]".format(" ".join([display(s) for s in x]))
+
     if isinstance(x, dict):
-        return display_funcs[x["type"]](x["value"])
+        return "{{{}}}".format(" ".join(["{} {}".format(":{}".format(k), display(v)) for k,v in x.items()]))
+
+    if isinstance(x, Keyword):
+        return ":{}".format(x.name)
+
+    if isinstance(x, Name):
+        return x
+
+    return x
 
 def parse(data):
     tree = l.parse(data)
     return ToAst().transform(tree)
+
+if __name__ == "__main__":
+    [print(a) for a in parse(open("./syntax.cr", "r").read())]
+
