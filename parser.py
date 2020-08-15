@@ -64,8 +64,8 @@ class Name:
     def __repr__(self):
         return self.name
 
-    def __eq__(self, a, b):
-        return a.name == b.name
+    def __eq__(self, a):
+        return self.name == a
 
 class Keyword:
     def __init__(self, name):
@@ -77,8 +77,8 @@ class Keyword:
     def __repr__(self):
         return self.name
 
-    def __eq__(self, a, b):
-        return a.name == b.name
+    def __eq__(self, a):
+        return self.name == a
 
 class ToAst(Transformer):
     lines = list
@@ -137,5 +137,6 @@ def parse(data):
     return ToAst().transform(tree)
 
 if __name__ == "__main__":
-    [print(display(a)) for a in parse(open("./syntax.cr", "r").read())]
+    if len(sys.argv) >= 2:
+        [print(display(a)) for a in parse(open(sys.argv[1], "r").read())]
 

@@ -1,9 +1,13 @@
 #!/usr/bin/env python
-import sys, parser
+import sys
 import atexit
 import os
 import readline
 import traceback
+
+from parser import parse, display, Name
+from eval_core import evl
+from environment import Env
 
 histfile = os.path.join(os.path.expanduser("~"), ".basilisk_history")
 
@@ -20,57 +24,38 @@ def save(prev_h_len, histfile):
     readline.append_history_file(new_h_len - prev_h_len, histfile)
 atexit.register(save, h_len, histfile)
 
-def read():
-    e = input("~>")
-    return parser.parse(e)
-
-def evl(ast, env):
-    if isinstance(ast, tuple):
-        if len(ast) == 0:
-            return ast
-        else:
-            ev = eval_ast(ast, env)
-            return ev[0](*ev[1::])
-
-    return eval_ast(ast, env)
+def read(e):
+    return parse(e)
 
 def prnt(e):
-    sys.stdout.write(" ".join([parser.display(s) for s in e]))
+    sys.stdout.write(" ".join([display(s) for s in e]))
     sys.stdout.write("\n")
 
-def rep(env):
-    b = read()
+def rep(e, env):
+    b = read(e)
     c = [evl(d, env) for d in b]
     prnt(c)
 
-def eval_ast(ast, env):
-    if isinstance(ast, dict):
-        return { k: evl(v, env) for k,v in ast.items() }
+repl_env = Env(None)
+repl_env.set('+', lambda a,b: a+b)
+repl_env.set('-', lambda a,b: a-b)
+repl_env.set('*', lambda a,b: a*b)
+repl_env.set('/', lambda a,b: int(a/b))
 
-    if isinstance(ast, parser.Name):
-        if ast.name in env:
-            return env[ast.name]
-        else:
-            raise Exception("Symbol not found: {}".format(ast.name))
-
-    if isinstance(ast, list):
-        return [evl(a, env) for a in ast]
-
-    if isinstance(ast, tuple):
-        return tuple(evl(x, env) for x in ast)
-
-    return ast
-
-repl_env = {
-        '+': lambda a,b: a+b,
-        '-': lambda a,b: a-b,
-        '*': lambda a,b: a*b,
-        '/': lambda a,b: int(a/b),
-}
+if len(sys.argv) >= 2:
+    data = open(sys.argv[1], "r").readlines()
+    for a in data:
+        try:
+            print(";; => {}".format(a))
+            rep(a, repl_env)
+        except Exception as e:
+            print(e)
+            traceback.print_exc(file=sys.stdout)
+    exit()
 
 while True:
     try:
-        rep(repl_env)
+        rep(input("~>"), repl_env)
     except Exception as e:
         print(e)
         traceback.print_exc(file=sys.stdout)
