@@ -4,8 +4,7 @@ from environment import Env
 ### SYMBOLS ###
 
 def let_symbol(ast,env):
-    if not isinstance(ast[1], tuple): raise Exception("Not a list {}".format(ast[1]))
-
+    if not isinstance(ast[1], tuple) and not isinstance(ast[1], list): raise Exception("Not a list or vector {}".format(ast[1]))
     if len(ast) != 3: raise Exception("Bad number or argument ({} for 3) for get* ({})".format(
         len(ast), display(ast)))
 
@@ -16,7 +15,7 @@ def let_symbol(ast,env):
         data = evl(i[1], new_env)
         new_env.set(i[0], data)
 
-    return eval_ast(ast[2], new_env)
+    return evl(ast[2], new_env)
 
 def eval_function(ast, env):
     ev = eval_ast(ast, env)
@@ -61,9 +60,9 @@ def eval_ast(ast, env):
         return env.get(ast.name)
 
     if isinstance(ast, list):
-        return [evl(a, env) for a in ast]
+        return list([evl(a, env) for a in ast])
 
     if isinstance(ast, tuple):
-        return tuple(evl(x, env) for x in ast)
+        return tuple([evl(x, env) for x in ast])
 
     return ast

@@ -33,6 +33,7 @@ def prnt(e):
 
 def rep(e, env):
     b = read(e)
+    print(";; {}".format(e))
     c = [evl(d, env) for d in b]
     prnt(c)
 
@@ -46,7 +47,6 @@ if len(sys.argv) >= 2:
     data = open(sys.argv[1], "r").readlines()
     for a in data:
         try:
-            print(";; => {}".format(a))
             rep(a, repl_env)
         except Exception as e:
             print(e)

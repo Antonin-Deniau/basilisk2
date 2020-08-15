@@ -83,7 +83,7 @@ class Keyword:
 class ToAst(Transformer):
     lines = list
     list = tuple
-    vector = list
+    vector = lambda _,x: list(x)
 
     nil = lambda _,x: None
     number = lambda _,x: float(x[0].value) if x[0].value.find(".") != -1 else int(x[0].value) 
