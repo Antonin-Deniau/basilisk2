@@ -1,7 +1,10 @@
 class Env:
-    def __init__(self, outer):
+    def __init__(self, outer, binds, exprs):
         self.outer = outer
         self.vals = {}
+
+        for i in zip(binds, exprs):
+            self.set(i[0], i[1])
 
     def set(self, name, value):
         self.vals[name] = value

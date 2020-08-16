@@ -37,7 +37,7 @@ def rep(e, env):
     c = [evl(d, env) for d in b]
     prnt(c)
 
-repl_env = Env(None)
+repl_env = Env(None, [], [])
 repl_env.set('+', lambda a,b: a+b)
 repl_env.set('-', lambda a,b: a-b)
 repl_env.set('*', lambda a,b: a*b)

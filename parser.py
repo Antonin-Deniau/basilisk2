@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import types
 from lark import Lark, Transformer, Token
 
 rules=r'''
@@ -102,6 +103,9 @@ class ToAst(Transformer):
 def display(x):
     if isinstance(x, bool):
         return "true" if x is True else "false"
+
+    if isinstance(x, types.LambdaType):
+        return "#<function>"
 
     if isinstance(x, tuple):
         return "({})".format(" ".join([display(r) for r in x]))

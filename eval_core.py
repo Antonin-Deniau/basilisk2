@@ -3,12 +3,39 @@ from environment import Env
 
 ### SYMBOLS ###
 
+def fn_symbol(ast, env):
+    if len(ast) != 3: raise Exception("Bad number or argument ({} for 3) for fn* ({})".format(
+        len(ast), display(ast)))
+
+    return lambda e: evl(ast[2], Env(env, ast[1], e))
+
+def if_symbol(ast, env):
+    if len(ast) < 2: return None
+    res_cond = eval_ast(ast[1], env)
+
+    if res_cond != None and res_cond != False:
+        if len(ast) >= 3:
+            return eval_ast(ast[2], env)
+        else:
+            return None
+    else:
+        if len(ast) >= 4:
+            return eval_ast(ast[3], env)
+        else:
+            return None
+
+def do_symbol(ast, env):
+    res = None
+    for x in ast[1::]:
+        res = eval_ast(x, env)
+    return res
+
 def let_symbol(ast,env):
     if not isinstance(ast[1], tuple) and not isinstance(ast[1], list): raise Exception("Not a list or vector {}".format(ast[1]))
     if len(ast) != 3: raise Exception("Bad number or argument ({} for 3) for get* ({})".format(
         len(ast), display(ast)))
 
-    new_env = Env(env)
+    new_env = Env(env, [], [])
     binding_list = ast[1]
 
     for i in zip(binding_list[::2], binding_list[1::2]):
@@ -36,6 +63,12 @@ def core_switch(ast, env):
             return def_symbol(ast,env)
         if ast[0].name == "let*":
             return let_symbol(ast,env)
+        if ast[0].name == "do":
+            return do_symbol(ast,env)
+        if ast[0].name == "if":
+            return if_symbol(ast,env)
+        if ast[0].name == "fn*":
+            return fn_symbol(ast,env)
 
         return eval_function(ast, env)
     else:
