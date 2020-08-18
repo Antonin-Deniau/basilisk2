@@ -5,6 +5,7 @@ import os
 import readline
 import traceback
 
+from core import ns
 from parser import parse, display, Name
 from eval_core import evl
 from environment import Env
@@ -28,24 +29,23 @@ def read(e):
     return parse(e)
 
 def prnt(e):
-    sys.stdout.write(" ".join([display(s) for s in e]))
+    sys.stdout.write(" ".join(map(display, e)))
     sys.stdout.write("\n")
 
 def rep(e, env):
     b = read(e)
-    print(";; {}".format(e))
     c = [evl(d, env) for d in b]
     prnt(c)
 
 repl_env = Env(None, [], [])
-repl_env.set('+', lambda a,b: a+b)
-repl_env.set('-', lambda a,b: a-b)
-repl_env.set('*', lambda a,b: a*b)
-repl_env.set('/', lambda a,b: int(a/b))
+for k, v in ns.items():
+    repl_env.set(k, v)
 
 if len(sys.argv) >= 2:
     data = open(sys.argv[1], "r").readlines()
     for a in data:
+        print(a.strip())
+
         try:
             rep(a, repl_env)
         except Exception as e:

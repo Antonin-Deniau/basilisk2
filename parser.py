@@ -100,7 +100,7 @@ class ToAst(Transformer):
     unquote = lambda _,x: tuple([Name("unquote"), *x])
     spliceunquote = lambda _,x: tuple([Name("spliceunquote"), *x])
 
-def display(x):
+def display(x, print_readably=True):
     if isinstance(x, bool):
         return "true" if x is True else "false"
 
@@ -117,7 +117,7 @@ def display(x):
         return repr(x)
 
     if isinstance(x, str):
-        return repr(x)
+        return repr(x) if print_readably else x
 
     if isinstance(x, list):
         return "[{}]".format(" ".join([display(s) for s in x]))
