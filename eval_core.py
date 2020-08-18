@@ -1,3 +1,5 @@
+import types
+
 from parser import display, Name
 from environment import Env
 
@@ -7,7 +9,7 @@ def fn_symbol(ast, env):
     if len(ast) != 3: raise Exception("Bad number or argument ({} for 3) for fn* ({})".format(
         len(ast), display(ast)))
 
-    return lambda e: evl(ast[2], Env(env, ast[1], e))
+    return lambda *e: evl(ast[2], Env(env, ast[1], e))
 
 def if_symbol(ast, env):
     if len(ast) < 2: return None
@@ -57,31 +59,20 @@ def def_symbol(ast, env):
     env.set(ast[1].name, value)
     return value
 
-def core_switch(ast, env):
-    if isinstance(ast[0], Name):
-        if ast[0].name == "def!":
-            return def_symbol(ast,env)
-        if ast[0].name == "let*":
-            return let_symbol(ast,env)
-        if ast[0].name == "do":
-            return do_symbol(ast,env)
-        if ast[0].name == "if":
-            return if_symbol(ast,env)
-        if ast[0].name == "fn*":
-            return fn_symbol(ast,env)
-
-        return eval_function(ast, env)
-    else:
-        raise Exception("{} not callable".format(ast[0]))
-
 ### EVAL PART ###
 
 def evl(ast, env):
     if isinstance(ast, tuple):
-        if len(ast) == 0:
-            return ast
+        if len(ast) == 0: return ast
 
-        return core_switch(ast,env)
+        if isinstance(ast[0], Name):
+            if ast[0].name == "def!": return def_symbol(ast,env)
+            if ast[0].name == "let*": return let_symbol(ast,env)
+            if ast[0].name == "do":   return do_symbol(ast,env)
+            if ast[0].name == "if":   return if_symbol(ast,env)
+            if ast[0].name == "fn*":  return fn_symbol(ast,env)
+
+        return eval_function(ast, env)
 
     return eval_ast(ast, env)
 

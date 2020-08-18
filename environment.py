@@ -1,5 +1,6 @@
 class Env:
     def __init__(self, outer, binds, exprs):
+        #print(binds, exprs)
         self.outer = outer
         self.vals = {}
 
