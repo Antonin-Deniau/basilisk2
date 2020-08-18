@@ -43,7 +43,7 @@ BOOLEAN.5: /true|false/
 COMMENT: /;.*(?=(\n|$))/
 COMMA: ","
 
-TOKEN: /[^"^.@~`\[\]:{}0-9\s,();][^"^@~`\[\]:{}0-9\s();]*/
+TOKEN: /[^"^.@~`\[\]:{}0-9\s,();][^"^@~`\[\]:{}\s();]*/
 
 %import common.ESCAPED_STRING
 %import common.NUMBER

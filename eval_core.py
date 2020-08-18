@@ -12,24 +12,21 @@ def fn_symbol(ast, env):
     return lambda *e: evl(ast[2], Env(env, ast[1], e))
 
 def if_symbol(ast, env):
-    if len(ast) < 2: return None
-    res_cond = eval_ast(ast[1], env)
+    if len(ast) < 3: return None
+    res_cond = evl(ast[1], env)
 
-    if res_cond != None and res_cond != False:
-        if len(ast) >= 3:
-            return eval_ast(ast[2], env)
-        else:
-            return None
-    else:
-        if len(ast) >= 4:
-            return eval_ast(ast[3], env)
-        else:
-            return None
+    if type(res_cond) == bool and res_cond == True: return evl(ast[2], env)
+    if type(res_cond) == int: return evl(ast[2], env)
+    if type(res_cond) == float: return evl(ast[2], env)
+    if type(res_cond) == list: return evl(ast[2], env)
+    if type(res_cond) == tuple: return evl(ast[2], env)
+
+    return evl(ast[3], env) if len(ast) >= 4 else None
 
 def do_symbol(ast, env):
     res = None
     for x in ast[1::]:
-        res = eval_ast(x, env)
+        res = evl(x, env)
     return res
 
 def let_symbol(ast,env):
