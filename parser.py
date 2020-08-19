@@ -22,6 +22,7 @@ lines: obj*
     | NUMBER -> number
     | BOOLEAN -> boolean
     | string
+    | variadic
     | NIL -> nil
 
 list: "(" obj* ")"
@@ -36,6 +37,7 @@ unquote: "~" obj
 spliceunquote: "~@" obj
 python: "\." TOKEN
 string: ESCAPED_STRING
+variadic: "&"
 
 NIL.5: "nil"
 BOOLEAN.5: /true|false/
@@ -43,7 +45,7 @@ BOOLEAN.5: /true|false/
 COMMENT: /;.*(?=(\n|$))/
 COMMA: ","
 
-TOKEN: /[^"^.@~`\[\]:{}0-9\s,();][^"^@~`\[\]:{}\s();]*/
+TOKEN: /[^"^.@~`\[\]:{}&0-9\s,();][^"^@~`\[\]:{}\s();]*/
 
 %import common.ESCAPED_STRING
 %import common.NUMBER
@@ -87,6 +89,7 @@ class ToAst(Transformer):
     vector = lambda _,x: list(x)
 
     nil = lambda _,x: None
+    variadic = lambda _,x: Name("&")
     number = lambda _,x: float(x[0].value) if x[0].value.find(".") != -1 else int(x[0].value) 
     boolean = lambda _,x: x[0] == "true"
     name = lambda _,x: Name(x[0].value)

@@ -9,6 +9,9 @@ def fn_symbol(ast, env):
     if len(ast) != 3: raise Exception("Bad number or argument ({} for 3) for fn* ({})".format(
         len(ast), display(ast)))
 
+    if (Name("&") in ast[1]) and (ast[1].index(Name("&")) != len(ast[1]) - 2):
+        raise Exception("Function should contain only one variadic argument")
+
     return lambda *e: evl(ast[2], Env(env, ast[1], e))
 
 def if_symbol(ast, env):
@@ -20,6 +23,7 @@ def if_symbol(ast, env):
     if type(res_cond) == float: return evl(ast[2], env)
     if type(res_cond) == list: return evl(ast[2], env)
     if type(res_cond) == tuple: return evl(ast[2], env)
+    if type(res_cond) == str: return evl(ast[2], env)
 
     return evl(ast[3], env) if len(ast) >= 4 else None
 

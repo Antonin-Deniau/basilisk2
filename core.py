@@ -1,7 +1,11 @@
 from parser import display
 
-def prn(a):
-    print(display(a))
+def prn(*a):
+    print(" ".join([display(i) for i in a]))
+    return None
+
+def println(*a):
+    print(" ".join([display(i, False) for i in a]))
     return None
 
 ns = {
@@ -18,5 +22,8 @@ ns = {
     '<=': lambda a, b: a <= b,
     '>=': lambda a, b: a >= b,
     '>': lambda a, b: a > b,
-    'prn': lambda a: prn(a),
+    'pr-str': lambda *a: " ".join([display(i) for i in a]),
+    'str': lambda *a: "".join([display(i, False) for i in a]),
+    'prn': prn,
+    'println': println,
 }
