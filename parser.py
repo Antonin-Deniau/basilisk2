@@ -111,7 +111,7 @@ def display(x, print_readably=True):
         return "#<function>"
 
     if isinstance(x, tuple):
-        return "({})".format(" ".join([display(r) for r in x]))
+        return "({})".format(" ".join([display(r, print_readably) for r in x]))
 
     if isinstance(x, int):
         return repr(x)
@@ -123,10 +123,10 @@ def display(x, print_readably=True):
         return repr(x) if print_readably else x
 
     if isinstance(x, list):
-        return "[{}]".format(" ".join([display(s) for s in x]))
+        return "[{}]".format(" ".join([display(s, print_readably) for s in x]))
 
     if isinstance(x, dict):
-        return "{{{}}}".format(" ".join(["{} {}".format(":{}".format(k), display(v)) for k,v in x.items()]))
+        return "{{{}}}".format(" ".join(["{} {}".format(":{}".format(k), display(v, print_readably)) for k,v in x.items()]))
 
     if isinstance(x, Keyword):
         return ":{}".format(x.name)
