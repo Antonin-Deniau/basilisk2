@@ -20,7 +20,7 @@ def equality(a, b):
 
 def read_string(a):
     try:
-        return parse(a)[0]
+        return parse(a)
     except IndexError:
         return None
 

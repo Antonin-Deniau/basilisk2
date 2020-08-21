@@ -4,7 +4,7 @@ from lark import Lark, Transformer, Token
 from basl_types import Name, Keyword, Fn
 
 rules=r'''
-lines: obj*
+?start: obj |
 
 ?obj: list
     | metadata
@@ -57,10 +57,10 @@ TOKEN: /[^"^.@~`\[\]:{}&0-9\s,();][^"^@~`\[\]:{}\s();]*/
 %ignore COMMA
 '''
 
-l = Lark(rules, parser='lalr', start="lines")
+l = Lark(rules, parser='lalr', start="start")
 
 class ToAst(Transformer):
-    lines = list
+    start = lambda _,x: x[0] if len(x) else None
     list = tuple
     vector = lambda _,x: list(x)
 

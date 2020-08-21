@@ -29,12 +29,11 @@ atexit.register(save, h_len, histfile)
 
 
 
-
 def read(e):
     return parse(e)
 
 def prnt(e):
-    sys.stdout.write(" ".join(map(display, e)))
+    if e != None: sys.stdout.write(display(e))
     sys.stdout.write("\n")
 
 def rep(e, env):
@@ -48,7 +47,6 @@ def load_str(e, env):
 
 
 
-
 repl_env = Env(None, [], [])
 for k, v in ns.items():
     repl_env.set(k, v)
@@ -58,10 +56,10 @@ load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\n
 
 
 
-
 if len(sys.argv) >= 2:
     data = open(sys.argv[1], "r").readlines()
     for a in data:
+        if a.strip == "": continue
         print(a.strip())
 
         try:
