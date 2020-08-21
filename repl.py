@@ -43,6 +43,7 @@ for k, v in ns.items():
     repl_env.set(k, v)
 
 rep("(def! not (fn* (a) (if a false true)))", repl_env)
+rep('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\nnil)")))))', repl_env)
 
 if len(sys.argv) >= 2:
     data = open(sys.argv[1], "r").readlines()

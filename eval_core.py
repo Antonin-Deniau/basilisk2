@@ -60,6 +60,10 @@ def def_symbol(ast, env):
     env.set(ast[1].name, value)
     return value, env
 
+def eval_symbol(ast, env):
+    new_env = Env(env, [],[])
+    return evl(ast[1], new_env), env
+
 ### EVAL PART ###
 
 def evl(ast, env):
@@ -68,13 +72,12 @@ def evl(ast, env):
             if len(ast) == 0: return ast
 
             if isinstance(ast[0], Name):
-
                 if ast[0].name == "def!": ast, env = def_symbol(ast,env); continue
                 if ast[0].name == "let*": ast, env = let_symbol(ast,env); continue
                 if ast[0].name == "do":   ast, env = do_symbol(ast,env); continue
                 if ast[0].name == "if":   ast, env = if_symbol(ast,env); continue
                 if ast[0].name == "fn*":  ast, env = fn_symbol(ast,env); continue
-
+                if ast[0].name == "eval":  ast, env = eval_symbol(ast,env); continue
 
             rs = eval_ast(ast, env)
             f = rs[0]
@@ -87,6 +90,8 @@ def evl(ast, env):
             if isinstance(f, types.LambdaType):
                 ast, env = f(*args), env
                 continue
+
+            return ast
 
         return eval_ast(ast, env)
 

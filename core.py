@@ -1,4 +1,5 @@
-from parser import display
+from parser import display, parse
+from basl_types import Name
 
 def prn(*a):
     print(" ".join([display(i) for i in a]))
@@ -17,6 +18,11 @@ def equality(a, b):
 
     return type(a) == type(b) and a == b
 
+def read_string(a):
+    try:
+        return parse(a)[0]
+    except IndexError:
+        return None
 
 ns = {
     '+': lambda a,b: a+b,
@@ -36,4 +42,6 @@ ns = {
     'str': lambda *a: "".join([display(i, False) for i in a]),
     'prn': prn,
     'println': println,
+    'read-string': read_string,
+    'slurp': lambda a: open(a, "r").read(),
 }
