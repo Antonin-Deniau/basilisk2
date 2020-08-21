@@ -1,4 +1,4 @@
-from parser import Name
+from basl_types import Name
 
 class Env:
     def __init__(self, outer, binds, exprs):
@@ -16,7 +16,7 @@ class Env:
             if Name("&") == i[0]: break
             self.set(i[0], i[1])
 
-        if Name("&") in binds: 
+        if Name("&") in binds:
             self.set(binds[-1], exprs[len(binds) - 2::])
 
     def set(self, name, value):

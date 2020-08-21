@@ -1,6 +1,6 @@
 import types
-
-from parser import display, Name
+from parser import display
+from basl_types import Fn, Name
 from environment import Env
 
 ### SYMBOLS ###
@@ -12,10 +12,14 @@ def fn_symbol(ast, env):
     if (Name("&") in ast[1]) and (ast[1].index(Name("&")) != len(ast[1]) - 2):
         raise Exception("Function should contain only one variadic argument")
 
-    return lambda *e: evl(ast[2], Env(env, ast[1], e)), env
+    body = ast[2]
+    params = ast[1]
+
+    func = lambda *e: evl(body, Env(env, params, e))
+    return Fn(body, params, env, func), env
 
 def if_symbol(ast, env):
-    if len(ast) < 3: return None
+    if len(ast) < 3: return None, env
     res_cond = evl(ast[1], env)
 
     if type(res_cond) == bool and res_cond == True: return ast[2], env
@@ -25,7 +29,7 @@ def if_symbol(ast, env):
     if type(res_cond) == tuple: return ast[2], env
     if type(res_cond) == str: return ast[2], env
 
-    return ast[3], env if len(ast) >= 4 else None, env
+    return (ast[3], env) if len(ast) >= 4 else (None, env)
 
 def do_symbol(ast, env):
     res = None
@@ -48,9 +52,15 @@ def let_symbol(ast,env):
     return ast[2], new_env
 
 def eval_function(ast, env):
-    ev = eval_ast(ast, env)
-    print(ev)
-    return ev[0](*ev[1::]), env
+    rs = eval_ast(ast, env)
+    f = rs[0]
+    args = rs[1:]
+
+    if isinstance(f, Fn):
+        new_env = Env(f.env, f.params, args)
+        return f.ast, new_env
+    else:
+        return f(*args), env
 
 def def_symbol(ast, env):
     if not isinstance(ast[1], Name): raise Exception("Not a symbol {}".format(ast[1]))
@@ -69,13 +79,14 @@ def evl(ast, env):
             if len(ast) == 0: return ast
 
             if isinstance(ast[0], Name):
+
                 if ast[0].name == "def!": ast, env = def_symbol(ast,env); continue
                 if ast[0].name == "let*": ast, env = let_symbol(ast,env); continue
                 if ast[0].name == "do":   ast, env = do_symbol(ast,env); continue
                 if ast[0].name == "if":   ast, env = if_symbol(ast,env); continue
                 if ast[0].name == "fn*":  ast, env = fn_symbol(ast,env); continue
 
-            ast, env = eval_function(ast, env); continue
+                ast, env = eval_function(ast, env); continue
 
         return eval_ast(ast, env)
 
@@ -92,4 +103,5 @@ def eval_ast(ast, env):
     if isinstance(ast, tuple):
         return tuple([evl(x, env) for x in ast])
 
-    return ast, env
+    return ast
+

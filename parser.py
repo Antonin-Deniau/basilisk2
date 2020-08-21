@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import types
 from lark import Lark, Transformer, Token
+from basl_types import Name, Keyword, Fn
 
 rules=r'''
 lines: obj*
@@ -57,32 +58,6 @@ TOKEN: /[^"^.@~`\[\]:{}&0-9\s,();][^"^@~`\[\]:{}\s();]*/
 
 l = Lark(rules, parser='lalr', start="lines")
 
-class Name:
-    def __init__(self, name):
-        self.name = name
-
-    def __hash__(self):
-        return hash(self.name)
-
-    def __repr__(self):
-        return self.name
-
-    def __eq__(self, a):
-        return self.name == a
-
-class Keyword:
-    def __init__(self, name):
-        self.name = name
-
-    def __hash__(self):
-        return hash(self.name)
-
-    def __repr__(self):
-        return self.name
-
-    def __eq__(self, a):
-        return self.name == a
-
 class ToAst(Transformer):
     lines = list
     list = tuple
@@ -108,6 +83,9 @@ def display(x, print_readably=True):
         return "true" if x is True else "false"
 
     if isinstance(x, types.LambdaType):
+        return "#<function>"
+
+    if isinstance(x, Fn):
         return "#<function>"
 
     if isinstance(x, tuple):

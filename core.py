@@ -14,7 +14,7 @@ def equality(a, b):
         for i in zip(a, b):
             if not equality(i[0], i[1]): return False
         return True
-    
+
     return type(a) == type(b) and a == b
 
 

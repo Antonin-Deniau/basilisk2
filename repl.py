@@ -6,7 +6,8 @@ import readline
 import traceback
 
 from core import ns
-from parser import parse, display, Name
+from parser import parse, display
+from basl_types import Name
 from eval_core import evl
 from environment import Env
 
@@ -34,7 +35,7 @@ def prnt(e):
 
 def rep(e, env):
     b = read(e)
-    c = [evl(d, env) for d in b]
+    c = evl(b, env)
     prnt(c)
 
 repl_env = Env(None, [], [])
