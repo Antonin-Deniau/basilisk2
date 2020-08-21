@@ -1,5 +1,5 @@
 from parser import display, parse
-from basl_types import Name
+from basl_types import Name, Atom, Fn
 
 def prn(*a):
     print(" ".join([display(i) for i in a]))
@@ -24,6 +24,12 @@ def read_string(a):
     except IndexError:
         return None
 
+def swap(a, b, *c):
+    if isinstance(b, Fn):
+        return a.reset(b.fn(a.data, *c))
+    else:
+        return a.reset(b(a.data, *c))
+
 ns = {
     '+': lambda a,b: a+b,
     '-': lambda a,b: a-b,
@@ -44,4 +50,9 @@ ns = {
     'println': println,
     'read-string': read_string,
     'slurp': lambda a: open(a, "r").read(),
+    'atom': lambda a: Atom(a),
+    'atom?': lambda a: isinstance(a, Atom),
+    'deref': lambda a: a.data if isinstance(a, Atom) else nil,
+    'reset!': lambda a, b: a.reset(b) if isinstance(a, Atom) else nil,
+    'swap!': swap,
 }

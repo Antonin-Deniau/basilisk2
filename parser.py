@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import types
 from lark import Lark, Transformer, Token
-from basl_types import Name, Keyword, Fn
+from basl_types import Name, Keyword, Fn, Atom
 
 rules=r'''
 ?start: obj |
@@ -112,6 +112,9 @@ def display(x, print_readably=True):
 
     if isinstance(x, Name):
         return x.name
+
+    if isinstance(x, Atom):
+        return "(atom {})".format(display(x.data))
 
     if x is None:
         return "nil"

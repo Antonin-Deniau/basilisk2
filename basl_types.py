@@ -30,3 +30,11 @@ class Fn:
         self.params = params
         self.env = env
         self.fn = fn
+
+class Atom:
+    def __init__(self, data):
+        self.data = data
+
+    def reset(self, a):
+        self.data = a
+        return a

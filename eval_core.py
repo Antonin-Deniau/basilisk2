@@ -5,64 +5,24 @@ from environment import Env
 
 ### SYMBOLS ###
 
-def fn_symbol(ast, env):
-    if len(ast) != 3: raise Exception("Bad number or argument ({} for 3) for fn* ({})".format(
-        len(ast), display(ast)))
+def check_fn(ast):
+    if len(ast) != 3:
+        raise Exception("Bad number or argument ({} for 3) for fn* ({})".format(len(ast), display(ast)))
 
     if (Name("&") in ast[1]) and (ast[1].index(Name("&")) != len(ast[1]) - 2):
         raise Exception("Function should contain only one variadic argument")
 
-    body = ast[2]
-    params = ast[1]
+def check_def(ast):
+    if not isinstance(ast[1], Name):
+        raise Exception("Not a symbol {}".format(ast[1]))
+    if len(ast) != 3:
+        raise Exception("Bad number or argument ({} for 3) for def! ({})".format(len(ast), display(ast)))
 
-    func = lambda *e: evl(body, Env(env, params, e))
-    return Fn(body, params, env, func), env
-
-def if_symbol(ast, env):
-    if len(ast) < 3: return None, env
-    res_cond = evl(ast[1], env)
-
-    if type(res_cond) == bool and res_cond == True: return ast[2], env
-    if type(res_cond) == int: return ast[2], env
-    if type(res_cond) == float: return ast[2], env
-    if type(res_cond) == list: return ast[2], env
-    if type(res_cond) == tuple: return ast[2], env
-    if type(res_cond) == str: return ast[2], env
-
-    return (ast[3], env) if len(ast) >= 4 else (None, env)
-
-def do_symbol(ast, env):
-    res = None
-    for x in ast[1:-1]:
-        res = evl(x, env)
-    return ast[-1], env
-
-def let_symbol(ast,env):
-    if not isinstance(ast[1], tuple) and not isinstance(ast[1], list): raise Exception("Not a list or vector {}".format(ast[1]))
-    if len(ast) != 3: raise Exception("Bad number or argument ({} for 3) for get* ({})".format(
-        len(ast), display(ast)))
-
-    new_env = Env(env, [], [])
-    binding_list = ast[1]
-
-    for i in zip(binding_list[::2], binding_list[1::2]):
-        data = evl(i[1], new_env)
-        new_env.set(i[0], data)
-
-    return ast[2], new_env
-
-def def_symbol(ast, env):
-    if not isinstance(ast[1], Name): raise Exception("Not a symbol {}".format(ast[1]))
-    if len(ast) != 3: raise Exception("Bad number or argument ({} for 3) for def! ({})".format(
-        len(ast), display(ast)))
-
-    value = evl(ast[2], env)
-    env.set(ast[1].name, value)
-    return value, env
-
-def eval_symbol(ast, env):
-    new_env = Env(env, [],[])
-    return evl(ast[1], new_env), env
+def check_let(ast):
+    if not isinstance(ast[1], tuple) and not isinstance(ast[1], list):
+        raise Exception("Not a list or vector {}".format(ast[1]))
+    if len(ast) != 3:
+        raise Exception("Bad number or argument ({} for 3) for get* ({})".format(len(ast), display(ast)))
 
 ### EVAL PART ###
 
@@ -72,25 +32,55 @@ def evl(ast, env):
             if len(ast) == 0: return ast
 
             if isinstance(ast[0], Name):
-                if ast[0].name == "def!": ast, env = def_symbol(ast,env); continue
-                if ast[0].name == "let*": ast, env = let_symbol(ast,env); continue
-                if ast[0].name == "do":   ast, env = do_symbol(ast,env); continue
-                if ast[0].name == "if":   ast, env = if_symbol(ast,env); continue
-                if ast[0].name == "fn*":  ast, env = fn_symbol(ast,env); continue
-                if ast[0].name == "eval":  ast, env = eval_symbol(ast,env); continue
+                if ast[0].name == "def!":
+                    check_def(ast)
+                    value = evl(ast[2], env)
+                    return env.set(ast[1].name, value)
 
-            rs = eval_ast(ast, env)
-            f = rs[0]
-            args = rs[1:]
+                if ast[0].name == "let*":
+                    check_let(ast)
+                    new_env = Env(env, [], [])
+                    binding_list = ast[1]
+
+                    for i in zip(binding_list[::2], binding_list[1::2]):
+                        data = evl(i[1], new_env)
+                        new_env.set(i[0], data)
+
+                    ast, env = ast[2], new_env; continue
+
+                if ast[0].name == "do":
+                    res = None
+                    for x in ast[1:-1]:
+                        res = evl(x, env)
+                    ast, env = ast[-1], env;continue
+
+                if ast[0].name == "if":
+                    if len(ast) < 3: ast, env = None, env; continue
+                    res_cond = evl(ast[1], env)
+
+                    if type(res_cond) == bool and res_cond == True: ast, env = ast[2], env; continue
+                    if type(res_cond) == int: ast, env = ast[2], env; continue
+                    if type(res_cond) == float: ast, env = ast[2], env; continue
+                    if type(res_cond) == list: ast, env = ast[2], env; continue
+                    if type(res_cond) == tuple: ast, env = ast[2], env; continue
+                    if type(res_cond) == str: ast, env = ast[2], env; continue
+
+                    ast, env = (ast[3], env) if len(ast) >= 4 else (None, env); continue
+
+                if ast[0].name == "fn*":
+                    body = ast[2]
+                    params = ast[1]
+
+                    func = lambda *e: evl(body, Env(env, params, e))
+                    return Fn(body, params, env, func)
+
+            [f, *args] = eval_ast(ast, env)
 
             if isinstance(f, Fn):
-                ast, env = f.ast, Env(f.env, f.params, args)
-                continue
+                ast, env = f.ast, Env(f.env, f.params, args); continue
 
             if isinstance(f, types.LambdaType):
                 return f(*args)
-
-            return ast
             
         return eval_ast(ast, env)
 

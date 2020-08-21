@@ -51,6 +51,8 @@ repl_env = Env(None, [], [])
 for k, v in ns.items():
     repl_env.set(k, v)
 
+repl_env.set("eval", lambda e: evl(e, repl_env))
+
 load_str("(def! not (fn* (a) (if a false true)))", repl_env)
 load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\nnil)")))))', repl_env)
 

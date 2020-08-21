@@ -21,6 +21,7 @@ class Env:
 
     def set(self, name, value):
         self.vals[name] = value
+        return value
 
     def find(self, name):
         if name in self.vals:
