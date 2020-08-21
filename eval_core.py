@@ -51,17 +51,6 @@ def let_symbol(ast,env):
 
     return ast[2], new_env
 
-def eval_function(ast, env):
-    rs = eval_ast(ast, env)
-    f = rs[0]
-    args = rs[1:]
-
-    if isinstance(f, Fn):
-        new_env = Env(f.env, f.params, args)
-        return f.ast, new_env
-    else:
-        return f(*args), env
-
 def def_symbol(ast, env):
     if not isinstance(ast[1], Name): raise Exception("Not a symbol {}".format(ast[1]))
     if len(ast) != 3: raise Exception("Bad number or argument ({} for 3) for def! ({})".format(
@@ -86,7 +75,18 @@ def evl(ast, env):
                 if ast[0].name == "if":   ast, env = if_symbol(ast,env); continue
                 if ast[0].name == "fn*":  ast, env = fn_symbol(ast,env); continue
 
-                ast, env = eval_function(ast, env); continue
+
+            rs = eval_ast(ast, env)
+            f = rs[0]
+            args = rs[1:]
+
+            if isinstance(f, Fn):
+                ast, env = f.ast, Env(f.env, f.params, args)
+                continue
+
+            if isinstance(f, types.LambdaType):
+                ast, env = f(*args), env
+                continue
 
         return eval_ast(ast, env)
 
