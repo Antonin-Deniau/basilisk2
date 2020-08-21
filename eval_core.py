@@ -88,11 +88,10 @@ def evl(ast, env):
                 continue
 
             if isinstance(f, types.LambdaType):
-                ast, env = f(*args), env
-                continue
+                return f(*args)
 
             return ast
-
+            
         return eval_ast(ast, env)
 
 def eval_ast(ast, env):

@@ -20,7 +20,7 @@ lines: obj*
     | COMMA
     | TOKEN -> name
     | COMMENT
-    | NUMBER -> number
+    | NUM -> number
     | BOOLEAN -> boolean
     | string
     | variadic
@@ -42,6 +42,7 @@ variadic: "&"
 
 NIL.5: "nil"
 BOOLEAN.5: /true|false/
+NUM.5: "-"?NUMBER
 
 COMMENT: /;.*(?=(\n|$))/
 COMMA: ","

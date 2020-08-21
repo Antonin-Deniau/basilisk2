@@ -26,6 +26,10 @@ def save(prev_h_len, histfile):
     readline.append_history_file(new_h_len - prev_h_len, histfile)
 atexit.register(save, h_len, histfile)
 
+
+
+
+
 def read(e):
     return parse(e)
 
@@ -38,12 +42,22 @@ def rep(e, env):
     c = evl(b, env)
     prnt(c)
 
+def load_str(e, env):
+    b = read(e)
+    evl(b, env)
+
+
+
+
 repl_env = Env(None, [], [])
 for k, v in ns.items():
     repl_env.set(k, v)
 
-rep("(def! not (fn* (a) (if a false true)))", repl_env)
-rep('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\nnil)")))))', repl_env)
+load_str("(def! not (fn* (a) (if a false true)))", repl_env)
+load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\nnil)")))))', repl_env)
+
+
+
 
 if len(sys.argv) >= 2:
     data = open(sys.argv[1], "r").readlines()
@@ -56,6 +70,8 @@ if len(sys.argv) >= 2:
             print(e)
             traceback.print_exc(file=sys.stdout)
     exit()
+
+
 
 while True:
     try:
