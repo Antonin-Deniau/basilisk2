@@ -1,3 +1,4 @@
+from lark import UnexpectedInput
 from parser import display, parse
 from basl_types import Name, Atom, Fn
 
@@ -21,6 +22,8 @@ def equality(a, b):
 def read_string(a):
     try:
         return parse(a)
+    except UnexpectedInput as e:
+        raise Exception("Erreur dans la chaine, par la: \n" + e.get_context(a, 200))
     except IndexError:
         return None
 

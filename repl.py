@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import sys
 import atexit
+import json
 import os
 import readline
 import traceback
+from lark import UnexpectedInput
 
 from core import ns
 from parser import parse, display
@@ -52,6 +54,7 @@ for k, v in ns.items():
     repl_env.set(k, v)
 
 repl_env.set("eval", lambda e: evl(e, repl_env))
+repl_env.set("*ARGV*", tuple(sys.argv))
 
 load_str("(def! not (fn* (a) (if a false true)))", repl_env)
 load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\nnil)")))))', repl_env)
@@ -59,23 +62,23 @@ load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\n
 
 
 if len(sys.argv) >= 2:
-    data = open(sys.argv[1], "r").readlines()
-    for a in data:
-        if a.strip == "": continue
-        print(a.strip())
+    if sys.argv[1] == "test":
+        data = open(sys.argv[2], "r").readlines()
+        for a in data:
+            if a.strip == "": continue
+            print(a.strip())
 
+            try:
+                rep(a, repl_env)
+            except UnexpectedInput as e:
+                print(e)
+                traceback.print_exc(file=sys.stdout)
+    else:
+        load_str("(load-file " + json.dumps(sys.argv[1]) + ")", repl_env)
+else:
+    while True:
         try:
-            rep(a, repl_env)
+            rep(input("~>"), repl_env)
         except Exception as e:
             print(e)
             traceback.print_exc(file=sys.stdout)
-    exit()
-
-
-
-while True:
-    try:
-        rep(input("~>"), repl_env)
-    except Exception as e:
-        print(e)
-        traceback.print_exc(file=sys.stdout)
