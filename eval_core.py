@@ -7,26 +7,6 @@ from environment import Env
 
 ### SYMBOLS ###
 
-def check_fn(ast):
-    if len(ast) != 3:
-        raise Exception("Bad number or argument ({} for 3) for fn* ({})".format(len(ast), display(ast)))
-
-    if (Name("&") in ast[1]) and (ast[1].index(Name("&")) != len(ast[1]) - 2):
-        raise Exception("Function should contain only one variadic argument")
-
-def check_def(ast):
-    if not isinstance(ast[1], Name):
-        raise Exception("Not a symbol {}".format(ast[1]))
-    if len(ast) != 3:
-        raise Exception("Bad number or argument ({} for 3) for def! ({})".format(len(ast), display(ast)))
-
-def check_let(ast):
-    if not isinstance(ast[1], tuple) and not isinstance(ast[1], list):
-        raise Exception("Not a list or vector {}".format(ast[1]))
-    if len(ast) != 3:
-        raise Exception("Bad number or argument ({} for 3) for get* ({})".format(len(ast), display(ast)))
-
-
 def quasiquote_process_list(ast):
     res = tuple([])
     for elt in reversed(ast):
@@ -80,18 +60,15 @@ def evl(ast, env):
 
             if isinstance(ast[0], Name):
                 if ast[0].name == "def!":
-                    check_def(ast)
                     value = evl(ast[2], env)
                     return env.set(ast[1].name, value)
 
                 if ast[0].name == "defmacro!":
-                    check_def(ast)
                     value = evl(ast[2], env)
                     value.is_macro = True
                     return env.set(ast[1].name, value)
 
                 if ast[0].name == "let*":
-                    check_let(ast)
                     new_env = Env(env, [], [])
                     binding_list = ast[1]
 
