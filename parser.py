@@ -77,7 +77,7 @@ class ToAst(Transformer):
     quote = lambda _,x: tuple([Name("quote"), *x])
     quasiquote = lambda _,x: tuple([Name("quasiquote"), *x])
     unquote = lambda _,x: tuple([Name("unquote"), *x])
-    spliceunquote = lambda _,x: tuple([Name("spliceunquote"), *x])
+    spliceunquote = lambda _,x: tuple([Name("splice-unquote"), *x])
 
 def display(x, print_readably=True):
     if isinstance(x, bool):

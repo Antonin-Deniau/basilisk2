@@ -34,15 +34,15 @@ def quasiquote(ast):
 
         res = []
         for elt in reversed(ast):
-            if isinstance(elt, tuple) and len(elt) != 0 and isinstance(elt[0], Name) and elt[0].name == "spliceunquote":
+            if isinstance(elt, tuple) and len(elt) != 0 and isinstance(elt[0], Name) and elt[0].name == "splice-unquote":
                 res = tuple([Name("concat"), elt[1], res])
             else:
                 res = tuple([Name("cons"), quasiquote(elt), res])
 
         return tuple(res)
 
-    if (isinstance(ast, tuple) and isinstance(ast, Name)) or isinstance(ast, list):
-        return list(ast)
+    if isinstance(ast, list):
+        return tuple([Name("vec"), quasiquote(tuple(ast))])
 
     if isinstance(ast, dict) or isinstance(ast, Name):
         return tuple([Name("quote"), ast])
@@ -73,6 +73,12 @@ def evl(ast, env):
 
                     ast, env = ast[2], new_env; continue
 
+                if ast[0].name == "quote":
+                    return ast[1]
+
+                if ast[0].name == "quasiquote":
+                    ast, env = quasiquote(ast[1]), env; continue
+
                 if ast[0].name == "do":
                     res = None
                     for x in ast[1:-1]:
@@ -98,12 +104,6 @@ def evl(ast, env):
 
                     func = lambda *e: evl(body, Env(env, params, e))
                     return Fn(body, params, env, func)
-
-                if ast[0].name == "quote":
-                    return ast[1]
-
-                if ast[0].name == "quasiquote":
-                    ast, env = quasiquote(ast[1]), env; continue
 
             [f, *args] = eval_ast(ast, env)
 
