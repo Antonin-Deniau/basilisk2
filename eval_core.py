@@ -77,26 +77,26 @@ def evl(ast, env):
                     return ast[1]
 
                 if ast[0].name == "quasiquote":
-                    ast, env = quasiquote(ast[1]), env; continue
+                    ast = quasiquote(ast[1]); continue
 
                 if ast[0].name == "do":
                     res = None
                     for x in ast[1:-1]:
                         res = evl(x, env)
-                    ast, env = ast[-1], env;continue
+                    ast = ast[-1]; continue
 
                 if ast[0].name == "if":
                     if len(ast) < 3: ast, env = None, env; continue
                     res_cond = evl(ast[1], env)
 
-                    if type(res_cond) == bool and res_cond == True: ast, env = ast[2], env; continue
-                    if type(res_cond) == int: ast, env = ast[2], env; continue
-                    if type(res_cond) == float: ast, env = ast[2], env; continue
-                    if type(res_cond) == list: ast, env = ast[2], env; continue
-                    if type(res_cond) == tuple: ast, env = ast[2], env; continue
-                    if type(res_cond) == str: ast, env = ast[2], env; continue
+                    if type(res_cond) == bool and res_cond == True: ast = ast[2]; continue
+                    if type(res_cond) == int: ast = ast[2]; continue
+                    if type(res_cond) == float: ast = ast[2]; continue
+                    if type(res_cond) == list: ast = ast[2]; continue
+                    if type(res_cond) == tuple: ast = ast[2]; continue
+                    if type(res_cond) == str: ast = ast[2]; continue
 
-                    ast, env = (ast[3], env) if len(ast) >= 4 else (None, env); continue
+                    ast = ast[3] if len(ast) >= 4 else None; continue
 
                 if ast[0].name == "fn*":
                     body = ast[2]
