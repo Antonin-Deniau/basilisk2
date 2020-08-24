@@ -63,4 +63,7 @@ ns = {
     'cons': lambda a, b: tuple([a,*b]),
     'concat': lambda *a: tuple(reduce(lambda acc, arr: [*acc, *arr], a, ())),
     'vec': lambda a: list(a) if isinstance(a, list) or isinstance(a, tuple) else [a],
+    'nth': lambda a, i: a[i],
+    'first': lambda a: a[0] if a != None and len(a) != 0 else None,
+    'rest': lambda a: tuple(a[1:]) if a != None and len(a) != 0 else tuple(),
 }

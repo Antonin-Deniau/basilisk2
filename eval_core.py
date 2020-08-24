@@ -53,8 +53,11 @@ def quasiquote(ast):
     return ast
 
 def is_macro_call(ast, env):
-    if isinstance(ast, list) and isinstance(ast[0], Name):
-        return env.get(ast[0].name).is_macro
+    if isinstance(ast, tuple) and isinstance(ast[0], Name):
+        try:
+            return env.get(ast[0].name).is_macro
+        except:
+            return False
     else:
         return False
 
@@ -102,7 +105,7 @@ def evl(ast, env):
                     return ast[1]
 
                 if ast[0].name == "macroexpand":
-                    return macroexpand(ast, env)
+                    return macroexpand(ast[1], env)
 
                 if ast[0].name == "quasiquoteexpand":
                     return quasiquote(ast[1])

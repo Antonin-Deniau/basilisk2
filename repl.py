@@ -58,6 +58,7 @@ repl_env.set("*ARGV*", tuple(sys.argv))
 
 load_str("(def! not (fn* (a) (if a false true)))", repl_env)
 load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\nnil)")))))', repl_env)
+load_str("(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))", repl_env)
 
 if len(sys.argv) >= 2:
     if sys.argv[1] == "test":
@@ -68,7 +69,7 @@ if len(sys.argv) >= 2:
 
             try:
                 rep(a, repl_env)
-            except UnexpectedInput as e:
+            except Exception as e:
                 print(e)
                 traceback.print_exc(file=sys.stdout)
     else:
