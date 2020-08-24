@@ -26,23 +26,26 @@ def check_let(ast):
     if len(ast) != 3:
         raise Exception("Bad number or argument ({} for 3) for get* ({})".format(len(ast), display(ast)))
 
+
+def quasiquote_process_list(ast):
+    res = tuple([])
+    for elt in reversed(ast):
+        if isinstance(elt, tuple) and len(elt) != 0 and isinstance(elt[0], Name) and elt[0].name == "splice-unquote":
+            res = tuple([Name("concat"), elt[1], res])
+        else:
+            res = tuple([Name("cons"), quasiquote(elt), res])
+
+    return res
+
 def quasiquote(ast):
     if isinstance(ast, tuple):
         if len(ast) != 0 and isinstance(ast[0], Name):
             if isinstance(ast[0], Name) and ast[0].name == "unquote":
                 return ast[1]
-
-        res = []
-        for elt in reversed(ast):
-            if isinstance(elt, tuple) and len(elt) != 0 and isinstance(elt[0], Name) and elt[0].name == "splice-unquote":
-                res = tuple([Name("concat"), elt[1], res])
-            else:
-                res = tuple([Name("cons"), quasiquote(elt), res])
-
-        return tuple(res)
+        return quasiquote_process_list(ast)
 
     if isinstance(ast, list):
-        return tuple([Name("vec"), quasiquote(tuple(ast))])
+        return tuple([Name("vec"), quasiquote_process_list(tuple(ast))])
 
     if isinstance(ast, dict) or isinstance(ast, Name):
         return tuple([Name("quote"), ast])
@@ -75,6 +78,9 @@ def evl(ast, env):
 
                 if ast[0].name == "quote":
                     return ast[1]
+
+                if ast[0].name == "quasiquoteexpand":
+                    return quasiquote(ast[1])
 
                 if ast[0].name == "quasiquote":
                     ast = quasiquote(ast[1]); continue
