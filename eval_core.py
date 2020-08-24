@@ -52,6 +52,19 @@ def quasiquote(ast):
 
     return ast
 
+def is_macro_call(ast, env):
+    if isinstance(ast, list) and isinstance(ast[0], Name):
+        return env.get(ast[0].name).is_macro
+    else:
+        return False
+
+def macroexpand(ast, env):
+    while is_macro_call(ast, env):
+        fnc = env.get(ast[0].name)
+        ast = fnc.fn(*ast[1:])
+
+    return ast
+
 ### EVAL PART ###
 
 def evl(ast, env):
@@ -59,10 +72,19 @@ def evl(ast, env):
         if isinstance(ast, tuple):
             if len(ast) == 0: return ast
 
+            ast = macroexpand(ast, env)
+            if not isinstance(ast, tuple): return eval_ast(ast, env)
+
             if isinstance(ast[0], Name):
                 if ast[0].name == "def!":
                     check_def(ast)
                     value = evl(ast[2], env)
+                    return env.set(ast[1].name, value)
+
+                if ast[0].name == "defmacro!":
+                    check_def(ast)
+                    value = evl(ast[2], env)
+                    value.is_macro = True
                     return env.set(ast[1].name, value)
 
                 if ast[0].name == "let*":
@@ -78,6 +100,9 @@ def evl(ast, env):
 
                 if ast[0].name == "quote":
                     return ast[1]
+
+                if ast[0].name == "macroexpand":
+                    return macroexpand(ast, env)
 
                 if ast[0].name == "quasiquoteexpand":
                     return quasiquote(ast[1])
