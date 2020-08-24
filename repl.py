@@ -59,8 +59,6 @@ repl_env.set("*ARGV*", tuple(sys.argv))
 load_str("(def! not (fn* (a) (if a false true)))", repl_env)
 load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\nnil)")))))', repl_env)
 
-
-
 if len(sys.argv) >= 2:
     if sys.argv[1] == "test":
         data = open(sys.argv[2], "r").readlines()

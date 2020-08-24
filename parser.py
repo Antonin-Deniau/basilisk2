@@ -47,7 +47,7 @@ NUM.5: "-"?NUMBER
 COMMENT: /;.*(?=(\n|$))/
 COMMA: ","
 
-TOKEN: /[^"^.@~`\[\]:{}&0-9\s,();][^"^@~`\[\]:{}\s();]*/
+TOKEN: /[^"^.@~`\[\]:{}&'0-9\s,();][^"^@~`\[\]:{}\s();]*/
 
 %import common.ESCAPED_STRING
 %import common.NUMBER
@@ -105,7 +105,7 @@ def display(x, print_readably=True):
         return "[{}]".format(" ".join([display(s, print_readably) for s in x]))
 
     if isinstance(x, dict):
-        return "{{{}}}".format(" ".join(["{} {}".format(":{}".format(k), display(v, print_readably)) for k,v in x.items()]))
+        return "{{{}}}".format(" ".join(["{} {}".format(display(k), display(v, print_readably)) for k,v in x.items()]))
 
     if isinstance(x, Keyword):
         return ":{}".format(x.name)

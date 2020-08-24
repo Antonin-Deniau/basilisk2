@@ -1,4 +1,6 @@
+from functools import reduce
 import types
+
 from parser import display
 from basl_types import Fn, Name
 from environment import Env
@@ -23,6 +25,29 @@ def check_let(ast):
         raise Exception("Not a list or vector {}".format(ast[1]))
     if len(ast) != 3:
         raise Exception("Bad number or argument ({} for 3) for get* ({})".format(len(ast), display(ast)))
+
+def quasiquote(ast):
+    if isinstance(ast, tuple):
+        if len(ast) != 0 and isinstance(ast[0], Name):
+            if isinstance(ast[0], Name) and ast[0].name == "unquote":
+                return ast[1]
+
+        res = []
+        for elt in reversed(ast):
+            if isinstance(elt, tuple) and len(elt) != 0 and isinstance(elt[0], Name) and elt[0].name == "spliceunquote":
+                res = tuple([Name("concat"), elt[1], res])
+            else:
+                res = tuple([Name("cons"), quasiquote(elt), res])
+
+        return tuple(res)
+
+    if (isinstance(ast, tuple) and isinstance(ast, Name)) or isinstance(ast, list):
+        return list(ast)
+
+    if isinstance(ast, dict) or isinstance(ast, Name):
+        return tuple([Name("quote"), ast])
+
+    return ast
 
 ### EVAL PART ###
 
@@ -74,6 +99,12 @@ def evl(ast, env):
                     func = lambda *e: evl(body, Env(env, params, e))
                     return Fn(body, params, env, func)
 
+                if ast[0].name == "quote":
+                    return ast[1]
+
+                if ast[0].name == "quasiquote":
+                    ast, env = quasiquote(ast[1]), env; continue
+
             [f, *args] = eval_ast(ast, env)
 
             if isinstance(f, Fn):
@@ -81,7 +112,7 @@ def evl(ast, env):
 
             if isinstance(f, types.LambdaType):
                 return f(*args)
-            
+
         return eval_ast(ast, env)
 
 def eval_ast(ast, env):

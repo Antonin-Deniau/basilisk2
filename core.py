@@ -1,3 +1,5 @@
+from functools import reduce
+
 from lark import UnexpectedInput
 from parser import display, parse
 from basl_types import Name, Atom, Fn
@@ -58,4 +60,7 @@ ns = {
     'deref': lambda a: a.data if isinstance(a, Atom) else nil,
     'reset!': lambda a, b: a.reset(b) if isinstance(a, Atom) else nil,
     'swap!': swap,
+    'cons': lambda a, b: tuple([a,*b]),
+    'concat': lambda *a: tuple(reduce(lambda acc, arr: [*acc, *arr], a, [])),
+    'vec': lambda a: list(a),
 }
