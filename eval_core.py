@@ -2,7 +2,7 @@ from functools import reduce
 import types
 
 from parser import display
-from basl_types import Fn, Name
+from basl_types import Fn, Name, BaslException
 from environment import Env
 
 ### SYMBOLS ###
@@ -77,6 +77,16 @@ def evl(ast, env):
                         new_env.set(i[0], data)
 
                     ast, env = ast[2], new_env; continue
+
+                if ast[0].name == "try*":
+                    try:
+                        return evl(ast[1], env)
+                    except BaslException as e:
+                        new_env = Env(env, [ast[1]], [e])
+                        return evl(ast[2], env)
+                    except Exception as e:
+                        new_env = Env(env, [ast[1]], [BaslException(e)])
+                        return evl(ast[2], env)
 
                 if ast[0].name == "quote":
                     return ast[1]

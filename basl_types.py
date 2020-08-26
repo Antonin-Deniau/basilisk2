@@ -39,3 +39,8 @@ class Atom:
     def reset(self, a):
         self.data = a
         return a
+
+class BaslException(Exception):
+    def __init__(self, parent):
+        self.is_raw = isinstance(parent, Exception)
+        self.message = str(parent) if self.is_raw else parent

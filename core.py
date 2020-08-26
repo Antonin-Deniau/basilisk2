@@ -2,7 +2,7 @@ from functools import reduce
 
 from lark import UnexpectedInput
 from parser import display, parse
-from basl_types import Name, Atom, Fn
+from basl_types import Name, Atom, Fn, BaslException
 
 def prn(*a):
     print(" ".join([display(i) for i in a]))
@@ -66,4 +66,5 @@ ns = {
     'nth': lambda a, i: a[i],
     'first': lambda a: a[0] if a != None and len(a) != 0 else None,
     'rest': lambda a: tuple(a[1:]) if a != None and len(a) != 0 else tuple(),
+    'throw': lambda a: raise BaslException(a),
 }
