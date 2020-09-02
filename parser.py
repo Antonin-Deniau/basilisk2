@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import types
 from lark import Lark, Transformer, Token
-from basl_types import Name, Keyword, Fn, Atom
+from basl_types import Name, Keyword, Fn, Atom, BaslException
 
 rules=r'''
 ?start: obj |
@@ -40,8 +40,8 @@ python: "\." TOKEN
 string: ESCAPED_STRING
 variadic: "&"
 
-NIL.5: "nil"
-BOOLEAN.5: /true|false/
+NIL.5: /nil(?!\?)/
+BOOLEAN.5: /(true|false)(?!\?)/
 NUM.5: "-"?NUMBER
 
 COMMENT: /;.*(?=(\n|$))/
@@ -109,6 +109,9 @@ def display(x, print_readably=True):
 
     if isinstance(x, Keyword):
         return ":{}".format(x.name)
+
+    if isinstance(x, BaslException):
+        return x.message
 
     if isinstance(x, Name):
         return x.name

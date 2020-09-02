@@ -1,5 +1,5 @@
 from functools import reduce
-import types
+import types, traceback
 
 from parser import display
 from basl_types import Fn, Name, BaslException
@@ -82,11 +82,12 @@ def evl(ast, env):
                     try:
                         return evl(ast[1], env)
                     except BaslException as e:
-                        new_env = Env(env, [ast[1]], [e])
-                        return evl(ast[2], env)
+                        new_env = Env(env, [ast[2][1].name], [e])
+                        return evl(ast[2][2], new_env)
                     except Exception as e:
-                        new_env = Env(env, [ast[1]], [BaslException(e)])
-                        return evl(ast[2], env)
+                        print("Unrecoverable: " + str(e))
+                        traceback.print_exc()
+                        exit()
 
                 if ast[0].name == "quote":
                     return ast[1]

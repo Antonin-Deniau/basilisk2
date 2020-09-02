@@ -2,7 +2,7 @@ from functools import reduce
 
 from lark import UnexpectedInput
 from parser import display, parse
-from basl_types import Name, Atom, Fn, BaslException
+from basl_types import Name, Atom, Fn, BaslException, Keyword
 
 def prn(*a):
     print(" ".join([display(i) for i in a]))
@@ -25,7 +25,7 @@ def read_string(a):
     try:
         return parse(a)
     except UnexpectedInput as e:
-        raise Exception("Erreur dans la chaine, par la: \n" + e.get_context(a, 200))
+        raise BaslException("Erreur dans la chaine, par la: \n" + e.get_context(a, 200))
     except IndexError:
         return None
 
@@ -35,13 +35,22 @@ def swap(a, b, *c):
     else:
         return a.reset(b(a.data, *c))
 
+def raiz(e):
+    raise BaslException(e)
+
+def appl(a, *b):
+    is_arr = lambda x: isinstance(x, tuple) or isinstance(x, list)
+    args = reduce(lambda acc, arr: [*acc, *arr] if is_arr(arr) else [*acc, arr], b, [])
+
+    return a(*args)
+
 ns = {
     '+': lambda a,b: a+b,
     '-': lambda a,b: a-b,
     '*': lambda a,b: a*b,
     '/': lambda a,b: int(a/b),
-    'list': lambda *a: tuple(a),
-    'list?': lambda a: isinstance(a,tuple),
+    'list': lambda *a: list(a),
+    'list?': lambda a: isinstance(a,list),
     'empty?': lambda a: len(a) == 0,
     'count': lambda a: 0 if a == None else len(a),
     '=': equality,
@@ -66,5 +75,25 @@ ns = {
     'nth': lambda a, i: a[i],
     'first': lambda a: a[0] if a != None and len(a) != 0 else None,
     'rest': lambda a: tuple(a[1:]) if a != None and len(a) != 0 else tuple(),
-    'throw': lambda a: raise BaslException(a),
+    'throw': raiz,
+    'apply': appl,
+    'map': map,
+    'nil?': lambda e: isinstance(e, type(None)),
+    'true?': lambda e: e == True,
+    'false?': lambda e: e == False,
+    'symbol?': lambda e: isinstance(e, Name),
+    'symbol': lambda e: Name(e),
+    'keyword': lambda e: Keyword(e.name if isinstance(e, Keyword) else e),
+    'keyword?': lambda e: isinstance(e, Keyword),
+    'vector': lambda *e: list(*e),
+    'vector?': lambda e: isinstance(e, list),
+    'sequential?': lambda e: isinstance(e, list) or isinstance(e, tuple),
+    'hash-map': lambda *e: { k[0]: k[1] for k in zip(e[::2], e[1::2]) },
+    'map?': lambda e: isinstance(e, dict),
+    'assoc': lambda a, *e: {**a, **{ k[0]: k[1] for k in zip(e[::2], e[1::2]) } },
+    'dissoc': lambda e, di: {key: t[key] for key in e if key not in di },
+    'get': lambda e, k: e[k] if k in e else None,
+    'contains?': lambda e, k: k in e,
+    'keys': lambda e: e.keys(),
+    'vals': lambda e: e.values(),
 }

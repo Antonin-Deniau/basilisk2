@@ -1,4 +1,4 @@
-from basl_types import Name
+from basl_types import Name, BaslException
 
 class Env:
     def __init__(self, outer, binds, exprs):
@@ -7,10 +7,10 @@ class Env:
 
         if len(binds) != len(exprs):
             if Name("&") not in binds:
-                raise Exception("Function should contain {} parametter".format(len(binds)))
+                raise BaslException("Function should contain {} parametter".format(len(binds)))
 
             if len(exprs) < len(binds) - 2:
-                raise Exception("Function should contain at least {} parametter".format(len(binds) - 2))
+                raise BaslException("Function should contain at least {} parametter".format(len(binds) - 2))
 
         for i in zip(binds, exprs):
             if Name("&") == i[0]: break
@@ -38,4 +38,4 @@ class Env:
         if env is not None:
             return env.vals[name]
         else:
-            raise Exception("Symbol not found {}".format(name))
+            raise BaslException("Symbol not found {}".format(name))
