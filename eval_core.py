@@ -85,9 +85,8 @@ def evl(ast, env):
                         new_env = Env(env, [ast[2][1].name], [e])
                         return evl(ast[2][2], new_env)
                     except Exception as e:
-                        print("Unrecoverable: " + str(e))
-                        traceback.print_exc()
-                        exit()
+                        new_env = Env(env, [ast[2][1].name], [e])
+                        return evl(ast[2][2], new_env)
 
                 if ast[0].name == "quote":
                     return ast[1]

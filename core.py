@@ -38,19 +38,31 @@ def swap(a, b, *c):
 def raiz(e):
     raise BaslException(e)
 
+def ret_func(a):
+    if isinstance(a, Fn):
+        return a.fn
+    else:
+        return a
+
 def appl(a, *b):
     is_arr = lambda x: isinstance(x, tuple) or isinstance(x, list)
     args = reduce(lambda acc, arr: [*acc, *arr] if is_arr(arr) else [*acc, arr], b, [])
+    return ret_func(a)(*args)
 
-    return a(*args)
+def basl_map(a, b):
+    s = map(ret_func(a), b)
+    if isinstance(b, tuple):
+        return tuple(s)
+    else:
+        return list(s)
 
 ns = {
     '+': lambda a,b: a+b,
     '-': lambda a,b: a-b,
     '*': lambda a,b: a*b,
     '/': lambda a,b: int(a/b),
-    'list': lambda *a: list(a),
-    'list?': lambda a: isinstance(a,list),
+    'list': lambda *a: tuple(a),
+    'list?': lambda a: isinstance(a, list),
     'empty?': lambda a: len(a) == 0,
     'count': lambda a: 0 if a == None else len(a),
     '=': equality,
@@ -77,7 +89,7 @@ ns = {
     'rest': lambda a: tuple(a[1:]) if a != None and len(a) != 0 else tuple(),
     'throw': raiz,
     'apply': appl,
-    'map': map,
+    'map': basl_map,
     'nil?': lambda e: isinstance(e, type(None)),
     'true?': lambda e: e == True,
     'false?': lambda e: e == False,
@@ -94,6 +106,6 @@ ns = {
     'dissoc': lambda e, di: {key: t[key] for key in e if key not in di },
     'get': lambda e, k: e[k] if k in e else None,
     'contains?': lambda e, k: k in e,
-    'keys': lambda e: e.keys(),
-    'vals': lambda e: e.values(),
+    'keys': lambda e: list(e.keys()),
+    'vals': lambda e: list(e.values()),
 }
