@@ -26,8 +26,10 @@ def read_string(a):
         return parse(a)
     except UnexpectedInput as e:
         raise BaslException("Erreur dans la chaine, par la: \n" + e.get_context(a, 200))
-    except IndexError:
-        return None
+    except BaslException as a:
+        return a
+    except Exception as e:
+        return BaslException(e)
 
 def swap(a, b, *c):
     if isinstance(b, Fn):
@@ -36,7 +38,7 @@ def swap(a, b, *c):
         return a.reset(b(a.data, *c))
 
 def raiz(e):
-    raise BaslException(e)
+    raise BaslException(str(e))
 
 def ret_func(a):
     if isinstance(a, Fn):
@@ -51,10 +53,7 @@ def appl(a, *b):
 
 def basl_map(a, b):
     s = map(ret_func(a), b)
-    if isinstance(b, tuple):
-        return tuple(s)
-    else:
-        return list(s)
+    return tuple(s)
 
 ns = {
     '+': lambda a,b: a+b,
@@ -97,15 +96,15 @@ ns = {
     'symbol': lambda e: Name(e),
     'keyword': lambda e: Keyword(e.name if isinstance(e, Keyword) else e),
     'keyword?': lambda e: isinstance(e, Keyword),
-    'vector': lambda *e: list(*e),
+    'vector': lambda *e: list([*e]),
     'vector?': lambda e: isinstance(e, list),
     'sequential?': lambda e: isinstance(e, list) or isinstance(e, tuple),
     'hash-map': lambda *e: { k[0]: k[1] for k in zip(e[::2], e[1::2]) },
     'map?': lambda e: isinstance(e, dict),
     'assoc': lambda a, *e: {**a, **{ k[0]: k[1] for k in zip(e[::2], e[1::2]) } },
-    'dissoc': lambda e, di: {key: t[key] for key in e if key not in di },
-    'get': lambda e, k: e[k] if k in e else None,
+    'dissoc': lambda e, *di: {key: val for key, val in e.items() if key not in di },
+    'get': lambda e, k: e.get(k, None) if e is not None else None,
     'contains?': lambda e, k: k in e,
-    'keys': lambda e: list(e.keys()),
-    'vals': lambda e: list(e.values()),
+    'keys': lambda e: tuple(e.keys()),
+    'vals': lambda e: tuple(e.values()),
 }

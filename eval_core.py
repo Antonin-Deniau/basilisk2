@@ -79,13 +79,16 @@ def evl(ast, env):
                     ast, env = ast[2], new_env; continue
 
                 if ast[0].name == "try*":
+                    if len(ast) < 3:
+                        return evl(ast[1], env)
+
                     try:
                         return evl(ast[1], env)
                     except BaslException as e:
                         new_env = Env(env, [ast[2][1].name], [e])
                         return evl(ast[2][2], new_env)
                     except Exception as e:
-                        new_env = Env(env, [ast[2][1].name], [e])
+                        new_env = Env(env, [ast[2][1].name], [str(e)])
                         return evl(ast[2][2], new_env)
 
                 if ast[0].name == "quote":
