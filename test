@@ -1,0 +1,47 @@
+basilisk> (+ 1 2)
+3
+basilisk> (+ 5 (* 2 3))
+11
+basilisk> (- (+ 5 (* 2 3)) 3)
+8
+basilisk> (/ (- (+ 5 (* 2 3)) 3) 4)
+2
+basilisk> (/ (- (+ 515 (* 87 311)) 302) 27)
+1010
+basilisk> (* -3 6)
+-18
+basilisk> (/ (- (+ 515 (* -87 311)) 296) 27)
+-994
+basilisk> (abc 1 2 3)
+Symbol not found abc
+Traceback (most recent call last):
+  File "./basilisk/repl.py", line 80, in <module>
+    rep(input("basilisk> "), repl_env)
+  File "./basilisk/repl.py", line 43, in rep
+    c = evl(b, env)
+  File "/media/fpsells/basilisk2/basilisk/eval_core.py", line 132, in evl
+    [f, *args] = eval_ast(ast, env)
+  File "/media/fpsells/basilisk2/basilisk/eval_core.py", line 153, in eval_ast
+    return tuple([evl(x, env) for x in ast])
+  File "/media/fpsells/basilisk2/basilisk/eval_core.py", line 153, in <listcomp>
+    return tuple([evl(x, env) for x in ast])
+  File "/media/fpsells/basilisk2/basilisk/eval_core.py", line 140, in evl
+    return eval_ast(ast, env)
+  File "/media/fpsells/basilisk2/basilisk/eval_core.py", line 147, in eval_ast
+    return env.get(ast.name)
+  File "/media/fpsells/basilisk2/basilisk/environment.py", line 41, in get
+    raise BaslException("Symbol not found {}".format(name))
+basl_types.BaslException: Symbol not found abc
+basilisk> ()
+()
+basilisk> [1 2 (+ 1 2)]
+[1 2 3]
+basilisk> {"a" (+ 7 8)}
+{'a' 15}
+basilisk> {:a (+ 7 8)}
+{:a 15}
+basilisk> []
+[]
+basilisk> {}
+{}
+basilisk> 

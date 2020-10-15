@@ -77,7 +77,7 @@ if len(sys.argv) >= 2:
 else:
     while True:
         try:
-            rep(input("~>"), repl_env)
+            rep(input("basilisk> "), repl_env)
         except Exception as e:
             print(e)
             traceback.print_exc(file=sys.stdout)
