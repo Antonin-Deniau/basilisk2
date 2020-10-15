@@ -35,7 +35,7 @@ def read(e):
     return parse(e)
 
 def prnt(e):
-    if e != None: sys.stdout.write(display(e))
+    sys.stdout.write(display(e))
     sys.stdout.write("\n")
 
 def rep(e, env):
@@ -61,23 +61,10 @@ load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\n
 load_str("(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))", repl_env)
 
 if len(sys.argv) >= 2:
-    if sys.argv[1] == "test":
-        data = open(sys.argv[2], "r").readlines()
-        for a in data:
-            if a.strip == "": continue
-            print(a.strip())
-
-            try:
-                rep(a, repl_env)
-            except Exception as e:
-                print(e)
-                traceback.print_exc(file=sys.stdout)
-    else:
-        load_str("(load-file " + json.dumps(sys.argv[1]) + ")", repl_env)
+    load_str("(load-file " + json.dumps(sys.argv[1]) + ")", repl_env)
 else:
     while True:
         try:
             rep(input("basilisk> "), repl_env)
         except Exception as e:
             print(e)
-            #traceback.print_exc(file=sys.stdout)

@@ -61,7 +61,7 @@ ns = {
     '*': lambda a,b: a*b,
     '/': lambda a,b: int(a/b),
     'list': lambda *a: tuple(a),
-    'list?': lambda a: isinstance(a, list),
+    'list?': lambda a: isinstance(a, tuple),
     'empty?': lambda a: len(a) == 0,
     'count': lambda a: 0 if a == None else len(a),
     '=': equality,
