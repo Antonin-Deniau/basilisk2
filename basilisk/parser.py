@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import types
+import types, json
 from lark import Lark, Transformer, Token
 from basl_types import Name, Keyword, Fn, Atom, BaslException
 
@@ -99,7 +99,7 @@ def display(x, print_readably=True):
         return repr(x)
 
     if isinstance(x, str):
-        return repr(x) if print_readably else x
+        return json.dumps(x) if print_readably else x
 
     if isinstance(x, list):
         return "[{}]".format(" ".join([display(s, print_readably) for s in x]))

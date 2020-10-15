@@ -80,4 +80,4 @@ else:
             rep(input("basilisk> "), repl_env)
         except Exception as e:
             print(e)
-            traceback.print_exc(file=sys.stdout)
+            #traceback.print_exc(file=sys.stdout)
