@@ -1,8 +1,19 @@
 from functools import reduce
+import base64
 
-from lark import UnexpectedInput
 from parser import display, parse
 from basl_types import Name, Atom, Fn, BaslException, Keyword
+
+
+def read_string(a):
+    try: 
+        return parse(a)
+    except UnexpectedToken as e:
+        return BaslException("Erreur dans la chaine, par la: \n" + e.get_context(data, 200))
+    except UnexpectedInput as e:
+        return BaslException("Erreur dans la chaine, par la: \n" + e.get_context(data, 200))
+    except Exception as e:
+        return BaslException(e)
 
 def prn(*a):
     print(" ".join([display(i) for i in a]))
@@ -20,16 +31,6 @@ def equality(a, b):
         return True
 
     return type(a) == type(b) and a == b
-
-def read_string(a):
-    try:
-        return parse(a)
-    except UnexpectedInput as e:
-        raise BaslException("Erreur dans la chaine, par la: \n" + e.get_context(a, 200))
-    except BaslException as a:
-        return a
-    except Exception as e:
-        return BaslException(e)
 
 def swap(a, b, *c):
     if isinstance(b, Fn):

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import types, json
+import types, json, sys
 from lark import Lark, Transformer, Token
+from lark import UnexpectedInput, UnexpectedToken
 from basl_types import Name, Keyword, Fn, Atom, BaslException
 
 rules=r'''
@@ -37,7 +38,8 @@ quasiquote: "`" obj
 unquote: "~" obj
 spliceunquote: "~@" obj
 python: "\." TOKEN
-string: ESCAPED_STRING
+
+string: /"(\\.|[^\\"])*"/
 variadic: "&"
 
 NIL.5: /nil(?!\?)/
@@ -49,7 +51,6 @@ COMMA: ","
 
 TOKEN: /[^"^.@~`\[\]:{}&'0-9\s,();][^"^@~`\[\]:{}\s();]*/
 
-%import common.ESCAPED_STRING
 %import common.NUMBER
 %import common.WS
 %ignore WS
@@ -71,7 +72,7 @@ class ToAst(Transformer):
     name = lambda _,x: Name(x[0].value)
     string = lambda _,x: eval(x[0])
     deref = lambda _,x: tuple([Name("deref"), *x])
-    metadata = lambda _,x: tuple([Name("with-meta"), x[0], x[1]])
+    metadata = lambda _,x: tuple([Name("with-meta"), x[1], x[0]])
     hashmap = lambda _,x: { i[0]: i[1] for i in zip(list(x[::2]), list(x[1::2])) }
     keyword = lambda _,x: Keyword(x[0].value)
     quote = lambda _,x: tuple([Name("quote"), *x])
@@ -128,7 +129,15 @@ def parse(data):
     tree = l.parse(data)
     return ToAst().transform(tree)
 
-if __name__ == "__main__":
-    if len(sys.argv) >= 2:
-        [print(display(a)) for a in parse(open(sys.argv[1], "r").read())]
+def prnt(e):
+    sys.stdout.write(display(e))
+    sys.stdout.write("\n")
 
+
+if __name__ == "__main__":
+    while True:
+        try:
+            res = prnt(parse(input("basilisk> ")))
+            print(res if res != None else "nil")
+        except Exception as e:
+            print("EOF: {}".format(e))
