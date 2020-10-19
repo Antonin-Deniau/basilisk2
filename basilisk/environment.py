@@ -17,7 +17,7 @@ class Env:
             self.set(i[0], i[1])
 
         if Name("&") in binds:
-            self.set(binds[-1], exprs[len(binds) - 2::])
+            self.set(binds[-1], tuple(exprs[len(binds) - 2::]))
 
     def set(self, name, value):
         self.vals[name] = value

@@ -1,5 +1,3 @@
-.PHONY: test
-
 test1:
 	./runtest.py --debug=test tests/step2_eval.mal ./basilisk/repl.py
 
@@ -8,3 +6,9 @@ test2:
 
 test3:
 	./runtest.py --debug=test tests/step4_if_fn_do.mal ./basilisk/repl.py
+
+test4:
+	./runtest.py --debug=test tests/step5_tco.mal ./basilisk/repl.py
+
+test5:
+	(cd ./basilisk && ../runtest.py --debug=test ../tests/step6_file.mal ./repl.py)
