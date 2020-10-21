@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import types, json, sys
+import types, json, sys, re
 from lark import Lark, Transformer, Token
 from lark import UnexpectedInput, UnexpectedToken
 from basl_types import Name, Keyword, Fn, Atom, BaslException
@@ -38,8 +38,7 @@ quasiquote: "`" obj
 unquote: "~" obj
 spliceunquote: "~@" obj
 python: "\." TOKEN
-
-string: /"(\\.|[^\\"])*"/
+string: ESCAPED_STRING
 variadic: "&"
 
 NIL.5: /nil(?!\?)/
@@ -51,6 +50,7 @@ COMMA: ","
 
 TOKEN: /[^"^.@~`\[\]:{}&'0-9\s,();][^"^@~`\[\]:{}\s();]*/
 
+%import common.ESCAPED_STRING
 %import common.NUMBER
 %import common.WS
 %ignore WS
@@ -59,6 +59,12 @@ TOKEN: /[^"^.@~`\[\]:{}&'0-9\s,();][^"^@~`\[\]:{}\s();]*/
 '''
 
 l = Lark(rules, parser='lalr', start="start")
+
+def pr_str(x, readably):
+    if readably:
+        return x.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+    else:
+        return x
 
 class ToAst(Transformer):
     start = lambda _,x: x[0] if len(x) else None
@@ -70,7 +76,12 @@ class ToAst(Transformer):
     number = lambda _,x: float(x[0].value) if x[0].value.find(".") != -1 else int(x[0].value) 
     boolean = lambda _,x: x[0] == "true"
     name = lambda _,x: Name(x[0].value)
-    string = lambda _,x: eval(x[0])
+
+    def string(_, x):
+        return eval(x[0])
+        #st = x[0][1:-1]
+        #.replace(r'\\"', '"').replace(r'()\\n', '\n').replace('\\\\', '\\')
+
     deref = lambda _,x: tuple([Name("deref"), *x])
     metadata = lambda _,x: tuple([Name("with-meta"), x[1], x[0]])
     hashmap = lambda _,x: { i[0]: i[1] for i in zip(list(x[::2]), list(x[1::2])) }
@@ -80,7 +91,7 @@ class ToAst(Transformer):
     unquote = lambda _,x: tuple([Name("unquote"), *x])
     spliceunquote = lambda _,x: tuple([Name("splice-unquote"), *x])
 
-def display(x, print_readably=True):
+def display(x, readably):
     if isinstance(x, bool):
         return "true" if x is True else "false"
 
@@ -91,7 +102,7 @@ def display(x, print_readably=True):
         return "#<function>"
 
     if isinstance(x, tuple):
-        return "({})".format(" ".join([display(r, print_readably) for r in x]))
+        return "({})".format(" ".join([display(r, readably) for r in x]))
 
     if isinstance(x, int):
         return repr(x)
@@ -100,13 +111,14 @@ def display(x, print_readably=True):
         return repr(x)
 
     if isinstance(x, str):
-        return json.dumps(x) if print_readably else x
+        return "\"{}\"".format(pr_str(x, readably)) if readably else x
 
     if isinstance(x, list):
-        return "[{}]".format(" ".join([display(s, print_readably) for s in x]))
+        return "[{}]".format(" ".join([display(s, readably) for s in x]))
 
     if isinstance(x, dict):
-        return "{{{}}}".format(" ".join(["{} {}".format(display(k), display(v, print_readably)) for k,v in x.items()]))
+        return "{{{}}}".format(
+                " ".join(["{} {}".format(display(k, readably), display(v, readably)) for k,v in x.items()]))
 
     if isinstance(x, Keyword):
         return ":{}".format(x.name)
@@ -118,7 +130,7 @@ def display(x, print_readably=True):
         return x.name
 
     if isinstance(x, Atom):
-        return "(atom {})".format(display(x.data))
+        return "(atom {})".format(display(x.data, readably))
 
     if x is None:
         return "nil"
@@ -130,7 +142,7 @@ def parse(data):
     return ToAst().transform(tree)
 
 def prnt(e):
-    sys.stdout.write(display(e))
+    sys.stdout.write(display(e, True))
     sys.stdout.write("\n")
 
 

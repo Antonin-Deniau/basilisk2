@@ -16,3 +16,12 @@ test5:
 
 test6:
 	(cd ./basilisk && ../runtest.py --debug=test ../tests/step6_file.mal ./repl.py)
+
+test7:
+	(cd ./basilisk && ../runtest.py --debug=test ../tests/step7_quote.mal ./repl.py)
+
+test8:
+	(cd ./basilisk && ../runtest.py --debug=test ../tests/step8_macros.mal ./repl.py)
+
+test9:
+	(cd ./basilisk && ../runtest.py --debug=test ../tests/step9_try.mal ./repl.py)

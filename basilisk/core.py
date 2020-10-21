@@ -2,6 +2,7 @@ from functools import reduce
 import base64
 
 from parser import display, parse
+from lark import UnexpectedInput, UnexpectedToken
 from basl_types import Name, Atom, Fn, BaslException, Keyword
 
 
@@ -9,14 +10,14 @@ def read_string(a):
     try: 
         return parse(a)
     except UnexpectedToken as e:
-        return BaslException("Erreur dans la chaine, par la: \n" + e.get_context(data, 200))
+        return BaslException("Erreur dans la chaine, par la: \n" + e.get_context(a, 200))
     except UnexpectedInput as e:
-        return BaslException("Erreur dans la chaine, par la: \n" + e.get_context(data, 200))
+        return BaslException("Erreur dans la chaine, par la: \n" + e.get_context(a, 200))
     except Exception as e:
         return BaslException(e)
 
 def prn(*a):
-    print(" ".join([display(i) for i in a]))
+    print(" ".join([display(i, True) for i in a]))
     return None
 
 def println(*a):
@@ -56,6 +57,10 @@ def basl_map(a, b):
     s = map(ret_func(a), b)
     return tuple(s)
 
+def pr_str(*a):
+    [print(display(i, True)) for i in a]
+    return " ".join([display(i, True) for i in a])
+
 ns = {
     '+': lambda a,b: a+b,
     '-': lambda a,b: a-b,
@@ -70,7 +75,7 @@ ns = {
     '<=': lambda a, b: a <= b,
     '>=': lambda a, b: a >= b,
     '>': lambda a, b: a > b,
-    'pr-str': lambda *a: " ".join([display(i) for i in a]),
+    'pr-str': pr_str,
     'str': lambda *a: "".join([display(i, False) for i in a]),
     'prn': prn,
     'println': println,

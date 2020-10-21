@@ -29,13 +29,11 @@ def save(prev_h_len, histfile):
 atexit.register(save, h_len, histfile)
 
 
-
-
 def read(e):
     return parse(e)
 
 def prnt(e):
-    sys.stdout.write(display(e))
+    sys.stdout.write(display(e, True))
     sys.stdout.write("\n")
 
 def rep(e, env):

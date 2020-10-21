@@ -1,7 +1,6 @@
 from functools import reduce
 import types, traceback
 
-from parser import display
 from basl_types import Fn, Name, BaslException
 from environment import Env
 
