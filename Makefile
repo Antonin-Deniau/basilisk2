@@ -28,3 +28,6 @@ test9:
 
 testA:
 	(cd ./basilisk && ../runtest.py --debug=test ../tests/stepA_mal.mal ./repl.py)
+
+testA1:
+	./runtest.py --debug=test ./tests/step1_read_print.mal ./mal/step1_read_print.mal
