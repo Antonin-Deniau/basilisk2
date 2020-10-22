@@ -76,12 +76,7 @@ class ToAst(Transformer):
     number = lambda _,x: float(x[0].value) if x[0].value.find(".") != -1 else int(x[0].value) 
     boolean = lambda _,x: x[0] == "true"
     name = lambda _,x: Name(x[0].value)
-
-    def string(_, x):
-        return eval(x[0])
-        #st = x[0][1:-1]
-        #.replace(r'\\"', '"').replace(r'()\\n', '\n').replace('\\\\', '\\')
-
+    string = lambda _, x: eval(x[0])
     deref = lambda _,x: tuple([Name("deref"), *x])
     metadata = lambda _,x: tuple([Name("with-meta"), x[1], x[0]])
     hashmap = lambda _,x: { i[0]: i[1] for i in zip(list(x[::2]), list(x[1::2])) }

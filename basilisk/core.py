@@ -5,10 +5,13 @@ from parser import display, parse
 from lark import UnexpectedInput, UnexpectedToken
 from basl_types import Name, Atom, Fn, BaslException, Keyword
 
+def with_meta(e, meta):
+    return e
+
 def readline(e):
     try:
         return input(e)
-    except BaseException as x:
+    except BaseException:
         return None
 
 def read_string(a):
@@ -127,13 +130,14 @@ ns = {
     'keys': lambda e: tuple(e.keys()),
     'vals': lambda e: tuple(e.values()),
     'time-ms': lambda: int(round(time.time() * 1000)),
-    'meta': lambda e: e.meta if isinstance(e, Fn) else None,
-    'with-meta': lambda a, b: Fn(a.ast, a.params, a.env, a.fn, a.is_macro, b),
-    'number?': lambda e: isinstance(e, float) or isinstance(e, int),
+    'number?': lambda e: (isinstance(e, float) or isinstance(e, int)) and not isinstance(e, bool),
     'string?': lambda e: isinstance(e, str),
-    'fn?': lambda e: isinstance(e, Fn) or isinstance(e, types.LambdaType),
+    'fn?': lambda e: (isinstance(e, Fn) and e.is_macro == False) or isinstance(e, types.LambdaType),
     'macro?': lambda e: isinstance(e, Fn) and e.is_macro,
-    'conj': lambda e, *rest: tuple(*rest, *e) if isinstance(e, tuple) else list(*e, *rest),
+    'conj': lambda e, *rest: tuple([*reversed(rest), *e]) if isinstance(e, tuple) else list([*e, *rest]),
     'quux-eval': lambda e: eval(e),
     'readline': readline,
+    'meta': lambda e: e.meta if hasattr(e, "meta") else None,
+    'with-meta': with_meta,
+    'seq': lambda e: tuple(e) if e != None and len(e) != 0 else None,
 }
