@@ -1,33 +1,35 @@
-
 test1:
-	./runtest.py --debug=test tests/step1_read_print.mal ./basilisk/parser.py
+	./runtest.py --debug=test tests/step1_read_print.mal ./src/parser.py
 
 test2:
-	./runtest.py --debug=test tests/step2_eval.mal ./basilisk/repl.py
+	./runtest.py --debug=test tests/step2_eval.mal ./src/basilisk
 
 test3:
-	./runtest.py --debug=test tests/step3_env.mal ./basilisk/repl.py
+	./runtest.py --debug=test tests/step3_env.mal ./src/basilisk
 
 test4:
-	./runtest.py --debug=test tests/step4_if_fn_do.mal ./basilisk/repl.py
+	./runtest.py --debug=test tests/step4_if_fn_do.mal ./src/basilisk
 
 test5:
-	./runtest.py --debug=test tests/step5_tco.mal ./basilisk/repl.py
+	./runtest.py --debug=test tests/step5_tco.mal ./src/basilisk
 
 test6:
-	(cd ./basilisk && ../runtest.py --debug=test ../tests/step6_file.mal ./repl.py)
+	(cd ./src && ../runtest.py --debug=test ../tests/step6_file.mal ./basilisk)
 
 test7:
-	(cd ./basilisk && ../runtest.py --debug=test ../tests/step7_quote.mal ./repl.py)
+	(cd ./src && ../runtest.py --debug=test ../tests/step7_quote.mal ./basilisk)
 
 test8:
-	(cd ./basilisk && ../runtest.py --debug=test ../tests/step8_macros.mal ./repl.py)
+	(cd ./src && ../runtest.py --debug=test ../tests/step8_macros.mal ./basilisk)
 
 test9:
-	(cd ./basilisk && ../runtest.py --debug=test ../tests/step9_try.mal ./repl.py)
+	(cd ./src && ../runtest.py --debug=test ../tests/step9_try.mal ./basilisk)
 
 testA:
-	(cd ./basilisk && ../runtest.py --debug=test ../tests/stepA_mal.mal ./repl.py)
+	(cd ./src && ../runtest.py --debug=test ../tests/stepA_mal.mal ./basilisk)
 
 testA1:
-	./runtest.py --debug=test ./tests/step1_read_print.mal ./mal/step1_read_print.mal
+	(cd ./mal && ../runtest.py --debug=test ../tests/step1_read_print.mal basilisk ./step1_read_print.mal)
+
+testA2:
+	(cd ./mal && ../runtest.py --debug=test ../tests/step2_eval.mal basilisk ./step2_eval.mal)

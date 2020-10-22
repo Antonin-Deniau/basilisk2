@@ -18,9 +18,9 @@ def read_string(a):
     try: 
         return parse(a)
     except UnexpectedToken as e:
-        return BaslException("Erreur dans la chaine, par la: \n" + e.get_context(a, 200))
+        return BaslException("EOF/Parsing error around: \n" + e.get_context(a, 200))
     except UnexpectedInput as e:
-        return BaslException("Erreur dans la chaine, par la: \n" + e.get_context(a, 200))
+        return BaslException("EOF/Parsing error around: \n" + e.get_context(a, 200))
     except Exception as e:
         return BaslException(e)
 

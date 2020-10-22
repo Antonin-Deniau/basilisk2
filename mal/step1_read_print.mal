@@ -1,4 +1,3 @@
-#!../basilisk/repl.py
 ;; read
 (def! READ read-string)
 
