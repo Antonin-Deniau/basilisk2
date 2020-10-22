@@ -124,7 +124,7 @@ def display(x, readably):
         return ":{}".format(x.name)
 
     if isinstance(x, BaslException):
-        return x.message
+        return display(x.message, readably)
 
     if isinstance(x, Name):
         return x.name

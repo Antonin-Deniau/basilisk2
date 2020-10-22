@@ -65,4 +65,4 @@ else:
         try:
             rep(input("basilisk> "), repl_env)
         except Exception as e:
-            print(e)
+            print("Exception: {}".format(e))

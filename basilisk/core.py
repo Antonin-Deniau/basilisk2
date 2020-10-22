@@ -40,7 +40,7 @@ def swap(a, b, *c):
         return a.reset(b(a.data, *c))
 
 def raiz(e):
-    raise BaslException(str(e))
+    raise BaslException(e)
 
 def ret_func(a):
     if isinstance(a, Fn):
@@ -58,7 +58,6 @@ def basl_map(a, b):
     return tuple(s)
 
 def pr_str(*a):
-    [print(display(i, True)) for i in a]
     return " ".join([display(i, True) for i in a])
 
 ns = {

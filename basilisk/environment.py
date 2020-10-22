@@ -38,4 +38,4 @@ class Env:
         if env is not None:
             return env.vals[name]
         else:
-            raise BaslException("{} not found.".format(name))
+            raise BaslException("{} not found.".format("'{}'".format(name)))
