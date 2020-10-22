@@ -25,3 +25,6 @@ test8:
 
 test9:
 	(cd ./basilisk && ../runtest.py --debug=test ../tests/step9_try.mal ./repl.py)
+
+testA:
+	(cd ./basilisk && ../runtest.py --debug=test ../tests/stepA_mal.mal ./repl.py)

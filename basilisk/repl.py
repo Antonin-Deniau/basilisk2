@@ -53,6 +53,7 @@ for k, v in ns.items():
 
 repl_env.set("eval", lambda e: evl(e, repl_env))
 repl_env.set("*ARGV*", tuple(sys.argv[1:]))
+repl_env.set("*host-language*", "basilisk")
 
 load_str("(def! not (fn* (a) (if a false true)))", repl_env)
 load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\nnil)")))))', repl_env)

@@ -1,5 +1,5 @@
 from functools import reduce
-import base64
+import base64, time
 
 from parser import display, parse
 from lark import UnexpectedInput, UnexpectedToken
@@ -29,6 +29,15 @@ def equality(a, b):
         if len(a) != len(b): return False
         for i in zip(a, b):
             if not equality(i[0], i[1]): return False
+        return True
+
+    if type(a) == dict and type(b) == dict:
+        for k in a.keys():
+            if k not in b: return False
+
+            bv = b[k]
+            av = a[k]
+            if not equality(bv, av): return False
         return True
 
     return type(a) == type(b) and a == b
@@ -112,4 +121,5 @@ ns = {
     'contains?': lambda e, k: k in e,
     'keys': lambda e: tuple(e.keys()),
     'vals': lambda e: tuple(e.values()),
+    'time-ms': lambda: int(round(time.time() * 1000)),
 }
