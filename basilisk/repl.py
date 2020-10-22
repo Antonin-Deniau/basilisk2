@@ -59,9 +59,11 @@ load_str("(def! not (fn* (a) (if a false true)))", repl_env)
 load_str('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\\nnil)")))))', repl_env)
 load_str("(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))", repl_env)
 
+
 if len(sys.argv) >= 2:
     load_str("(load-file " + json.dumps(sys.argv[1]) + ")", repl_env)
 else:
+    load_str('(println (str "Mal [" *host-language* "]"))', repl_env)
     while True:
         try:
             rep(input("basilisk> "), repl_env)

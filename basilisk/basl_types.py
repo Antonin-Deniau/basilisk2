@@ -25,12 +25,13 @@ class Keyword:
         return self.name == a
 
 class Fn:
-    def __init__(self, ast, params, env, fn, is_macro=False):
+    def __init__(self, ast, params, env, fn, is_macro=False, meta=None):
         self.ast = ast
         self.params = params
         self.env = env
         self.fn = fn
         self.is_macro = is_macro
+        self.meta = None
 
 class Atom:
     def __init__(self, data):

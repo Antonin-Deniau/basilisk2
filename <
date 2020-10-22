@@ -5,11 +5,6 @@ from parser import display, parse
 from lark import UnexpectedInput, UnexpectedToken
 from basl_types import Name, Atom, Fn, BaslException, Keyword
 
-def readline(e):
-    try:
-        return input(e)
-    except BaseException as x:
-        return None
 
 def read_string(a):
     try: 
@@ -135,5 +130,5 @@ ns = {
     'macro?': lambda e: isinstance(e, Fn) and e.is_macro,
     'conj': lambda e, *rest: tuple(*rest, *e) if isinstance(e, tuple) else list(*e, *rest),
     'quux-eval': lambda e: eval(e),
-    'readline': readline,
+    'readline': lambda e:
 }
