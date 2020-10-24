@@ -33,3 +33,6 @@ testA1:
 
 testA2:
 	(cd ./mal && ../runtest.py --debug=test ../tests/step2_eval.mal basilisk ./step2_eval.mal)
+
+testA3:
+	(cd ./mal && ../runtest.py --debug=test ../tests/step3_env.mal basilisk ./step3_env.mal)

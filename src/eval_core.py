@@ -1,7 +1,7 @@
 from functools import reduce
 import types, traceback
 
-from basl_types import Fn, Name, BaslException, Keyword
+from basl_types import Fn, Name, BaslException, Keyword, Atom
 from environment import Env
 
 ### SYMBOLS ###
@@ -122,6 +122,7 @@ def evl(ast, env):
                     if type(res_cond) == Keyword: ast = ast[2]; continue
                     if type(res_cond) == Name: ast = ast[2]; continue
                     if type(res_cond) == types.LambdaType: ast = ast[2]; continue
+                    if type(res_cond) == Atom: ast = ast[2]; continue
 
                     ast = ast[3] if len(ast) >= 4 else None; continue
 
