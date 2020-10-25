@@ -50,7 +50,8 @@ COMMA: ","
 
 TOKEN: /[^"^.@~`\[\]:{}&'0-9\s,();][^"^@~`\[\]:{}\s();]*/
 
-%import common.ESCAPED_STRING
+ESCAPED_STRING: /"(\\.|[^"\\])*"/
+
 %import common.NUMBER
 %import common.WS
 %ignore WS
@@ -60,11 +61,43 @@ TOKEN: /[^"^.@~`\[\]:{}&'0-9\s,();][^"^@~`\[\]:{}\s();]*/
 
 l = Lark(rules, parser='lalr', start="start")
 
+def unescape(s):
+    res =  ""
+    esc = False
+    for i in s:
+        if i == '\\' and esc == False:
+            esc = True
+        elif i == '\\' and esc == True:
+            res += "\\"
+            esc = False
+        elif i == "n" and esc == True:
+            res += "\n"
+            esc = False
+        elif i == '"' and esc == True:
+            res += '"'
+            esc = False
+        else:
+            res += i
+            esc = False
+
+    return res
+
+def escape(s):
+    res =  ""
+    for i in s:
+        if i == "\\":
+            res += "\\\\"
+        elif i == '"':
+            res += '\\"'
+        elif i == '\n':
+            res += '\\n'
+        else:
+            res += i
+
+    return res
+
 def pr_str(x, readably):
-    if readably:
-        return x.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
-    else:
-        return x
+    return escape(x) if readably else x
 
 class ToAst(Transformer):
     start = lambda _,x: x[0] if len(x) else None
@@ -76,7 +109,7 @@ class ToAst(Transformer):
     number = lambda _,x: float(x[0].value) if x[0].value.find(".") != -1 else int(x[0].value) 
     boolean = lambda _,x: x[0] == "true"
     name = lambda _,x: Name(x[0].value)
-    string = lambda _, x: eval(x[0])
+    string = lambda _, x: unescape(x[0][1:-1])
     deref = lambda _,x: tuple([Name("deref"), *x])
     metadata = lambda _,x: tuple([Name("with-meta"), x[1], x[0]])
     hashmap = lambda _,x: { i[0]: i[1] for i in zip(list(x[::2]), list(x[1::2])) }

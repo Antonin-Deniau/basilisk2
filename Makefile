@@ -36,3 +36,9 @@ testA2:
 
 testA3:
 	(cd ./mal && ../runtest.py --debug=test ../tests/step3_env.mal basilisk ./step3_env.mal)
+
+testA4:
+	(cd ./mal && ../runtest.py --debug=test ../tests/step4_if_fn_do.mal basilisk ./step4_if_fn_do.mal)
+
+testA6:
+	(cd ./mal && ../runtest.py --debug=test ../tests/step6_file.mal basilisk ./step6_file.mal)

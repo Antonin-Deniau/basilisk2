@@ -18,11 +18,11 @@ def read_string(a):
     try: 
         return parse(a)
     except UnexpectedToken as e:
-        return BaslException("EOF/Parsing error around: \n" + e.get_context(a, 200))
+        raise BaslException("EOF/Parsing error around: \n" + e.get_context(a, 200))
     except UnexpectedInput as e:
-        return BaslException("EOF/Parsing error around: \n" + e.get_context(a, 200))
+        raise BaslException("EOF/Parsing error around: \n" + e.get_context(a, 200))
     except Exception as e:
-        return BaslException(e)
+        raise BaslException(e)
 
 def prn(*a):
     print(" ".join([display(i, True) for i in a]))
