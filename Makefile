@@ -42,3 +42,13 @@ testA4:
 
 testA6:
 	(cd ./mal && ../runtest.py --debug=test ../tests/step6_file.mal basilisk ./step6_file.mal)
+
+testA7:
+	(cd ./mal && ../runtest.py --debug=test ../tests/step7_quote.mal basilisk ./step7_quote.mal)
+
+testA8:
+	(cd ./mal && ../runtest.py --debug=test ../tests/step8_macros.mal basilisk ./step8_macros.mal)
+
+testA9:
+	(cd ./mal && ../runtest.py --debug=test ../tests/step9_try.mal basilisk ./step9_try.mal)
+

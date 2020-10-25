@@ -120,6 +120,6 @@
       (repl-loop (readline "mal-user> "))))))
 
 ;; main
-(if (empty? *ARGV*)
+;(if (empty? *ARGV*)
   (repl-loop "")
-  (rep (str "(load-file \"" (first *ARGV*) "\")")))
+;  (rep (str "(load-file \"" (first *ARGV*) "\")")))
