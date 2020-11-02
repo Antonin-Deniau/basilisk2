@@ -26,8 +26,9 @@ func main() {
 	}
 	defer rl.Close()
 
+	/*
 	// REPL
-	replEnv := Env(nil, make([]BName), make([]BaslType))
+	replEnv := Env(nil, make([]BName), make([]BType))
 	for k, v := range ns {
 		replEnv.Set(k, v)
 	}
@@ -62,10 +63,12 @@ func main() {
 			rl.SaveHistory(line)
 		}
 	}
+	*/
 
 }
 
-func Read(e string) (error) {
+/*
+func Read(e string) (BType, error) {
 	return Parse(e)
 }
 
@@ -80,9 +83,9 @@ func Rep(e string, env *Env) (error) {
 		return err
 	}
 
-	c, err2 := Evl(b, env)
-	if err2 != nil {
-		return err2
+	c, err := Evl(b, env)
+	if err != nil {
+		return err
 	}
 
 	Print(c)
@@ -90,8 +93,21 @@ func Rep(e string, env *Env) (error) {
 	return nil
 }
 
-func LoadStr(e string) {
-	b := Read(e)
-	Evl(b, env)
+func LoadStr(e string, env *Env) {
+	b, err := Read(e)
+
+	if err != nil {
+		log.Print(fmt.Sprintf("Error in LoadString,Read: %s", err))
+		return
+	}
+
+
+	_, err := Evl(b, env)
+	if err != nil {
+		log.Print(fmt.Sprintf("Error in LoadString,Evl: %s", err))
+		return
+	}
 }
 
+
+*/

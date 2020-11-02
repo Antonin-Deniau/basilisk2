@@ -6,17 +6,17 @@ import (
 
 type Env struct {
 	Outer *Env
-	Vals map[string]*BaslType
+	Vals map[string]*BType
 }
 
-func NewEnv(outer *Env, binds []Name, exprs []BaslType) *Env {
+func NewEnv(outer *Env, binds []BName, exprs []BType) *Env {
 	e := &Env{
 		Outer: outer,
-		Vals: make([]BaslType),
+		Vals: make([]BType),
 	}
 
 	if len(binds) != len(exprs) {
-		if val, ok := binds[Name("&")]; !ok {
+		if val, ok := binds[BName("&")]; !ok {
 			raise BaslException(fmt.Sprintf("Function should contain %d parametter", len(binds)))
 		}
 
@@ -26,16 +26,16 @@ func NewEnv(outer *Env, binds []Name, exprs []BaslType) *Env {
 	}
 
 	for i in zip(binds, exprs) {
-		if Name("&") == i[0] { break }
+		if BName("&") == i[0] { break }
 		e.Set(i[0], i[1])
 	}
 
-	if Name("&") in binds {
+	if BName("&") in binds {
 		e.Set(binds[-1], tuple(exprs[len(binds) - 2::]))
 	}
 }
 
-func (e Env) Set(name Name, value BaslType) {
+func (e Env) Set(name BName, value BType) {
 	e.vals[name] = value
 	return value
 }
@@ -52,12 +52,12 @@ func (e Env) Find(name) *Env {
 	}
 }
 
-func (e Env) Get(name) {
+func (e Env) Get(name) (BType, error) {
 	env = self.find(name)
 
-	if env is not None {
+	if env != nil {
 		return env.vals[name]
 	} else {
-		raise BaslException("{} not found".format("'{}'".format(name)))
+		return nil, BException(fmt.Sprintf("'%s' not found", name))
 	}
 }

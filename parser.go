@@ -1,3 +1,17 @@
+package main
+
+import (
+	"github.com/alecthomas/participle/lexer"
+)
+
+type Program struct {
+	Pos lexer.Position
+
+	Lines []*BType `@@*`
+}
+
+
+
 rules=r'''
 ?start: obj |
 
@@ -11,7 +25,6 @@ rules=r'''
     | quasiquote
     | spliceunquote
     | unquote
-    | python
     | COMMA
     | TOKEN -> name
     | COMMENT
@@ -31,7 +44,6 @@ quote: "'" obj
 quasiquote: "`" obj
 unquote: "~" obj
 spliceunquote: "~@" obj
-python: "\." TOKEN
 string: ESCAPED_STRING
 variadic: "&"
 
