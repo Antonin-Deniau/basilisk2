@@ -11,6 +11,15 @@ type Program struct {
 }
 
 
+	sqlLexer = lexer.Must(lexer.Regexp(
+		`(\s+)` +
+		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
+		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
+		`|(?P<String>'[^']*'|"[^"]*")` +
+		`|(?P<Operators><>|!=|<=|>=|[-+*/%,.()=<>])`,
+	))
+
+
 
 rules=r'''
 ?start: obj |

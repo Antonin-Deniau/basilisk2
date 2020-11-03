@@ -4,74 +4,114 @@ import (
 	"github.com/alecthomas/participle/lexer"
 )
 
+// PARSABLE
+
 type BType struct {
 	Pos lexer.Position
 	
-	Index int
-
-	Line int `@Number`
-
-	Number        *float64    `  @Number`
-	Variable      *string     `| @Ident`
-	String        *string     `| @String`
-	Call          *Call       `| @@`
-	Subexpression *Expression `| "(" @@ ")"`
+	BNumber   *BNumber   `@@`
+	BKeyword  *BKeyword  `| @@`
+	BString   *BString   `| @@`
+	BList     *BList     `| @@`
+	BMetadata *BMetadata `| @@`
 }
 
 type BList struct {
+	Pos lexer.Position
+
+	Values []*BType `"(" @@* ")"`
 }
 
 type BMetadata struct {
+	Metadata *BType `"^" @@`
+	Value    *BType ` @@`
 }
 
 type BDeref struct {
+	Pos lexer.Position
+
+	Value *BType `"@" @@`
 }
 
 type BHashMap struct {
+	Pos lexer.Position
+
+	Map []*BHashMapEntry `"{" @@* "}"`
+}
+
+type BHashMapEntry struct {
+	Pos lexer.Position
+
+	Key   *BType `@@`
+	Value *BType ` @@`
 }
 
 type BVector struct {
+	Pos lexer.Position
+
+	Values *BType `"[" @@* "]"`
 }
 
 type BQuote struct {
+	Pos lexer.Position
+
+	Value *BType `"'" @@`
 }
 
 type BQuasiquote struct {
+	Pos lexer.Position
+
+	Value *BType "\"`\" @@"
 }
 
 type BSpliceUnquote struct {
+	Pos lexer.Position
+
+	Value *BType `"~@" @@`
 }
 
 type BUnquote struct {
+	Pos lexer.Position
+
+	Value *BType `"~" @@`
 }
 
 type BString struct {
+	Pos lexer.Position
+
+	Value string `@String`
 }
 
 type BNumber struct {
+	Pos lexer.Position
+
+	Value float64 `@Number`
 }
 
 type BName struct {
 	Pos lexer.Position
 
-	name string `@Ident`
+	Value string `@Ident`
 }
 
 type BKeyword struct {
-    def __init__(self, name):
-        self.name = name
+	Pos lexer.Position
 
-    def __hash__(self):
-        return hash(self.name)
-
-    def __repr__(self):
-        return self.name
-
-    def __eq__(self, a):
-        return self.name == a
+	Value string `":" @Ident`
 }
 
+// NON PARSABLE
+
 type BFn struct {
+	Ast     *BType
+	Params  []*BType
+	Env     *Env
+	Fn      *BFn
+	IsMacro bool
+	Meta    *BType
+}
+
+func NewBFn() {
     def __init__(self, ast, params, env, fn, is_macro=False, meta=None):
         self.ast = ast
         self.params = params
@@ -82,15 +122,26 @@ type BFn struct {
 }
 
 type BAtom struct {
+	Data *BType
+}
+
+func NewBAtom() {
     def __init__(self, data):
         self.data = data
+}
 
+func (BAtom) Reset() {
     def reset(self, a):
         self.data = a
         return a
 }
 
 type BException {
+	IsRaw bool
+	Message *BType
+}
+
+func () NewBException() {
     def __init__(self, parent):
         self.is_raw = isinstance(parent, Exception)
         self.message = str(parent) if self.is_raw else parent
