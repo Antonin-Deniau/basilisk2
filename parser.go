@@ -27,45 +27,57 @@ parser = participle.MustBuild(&Program{},
     participle.Elide("Comment", "Whitespace"),
 )
 
-def unescape(s):
-    res =  ""
-    esc = False
-    for i in s:
-        if i == '\\' and esc == False:
-            esc = True
-        elif i == '\\' and esc == True:
-            res += "\\"
-            esc = False
-        elif i == "n" and esc == True:
-            res += "\n"
-            esc = False
-        elif i == '"' and esc == True:
-            res += '"'
-            esc = False
-        else:
-            res += i
-            esc = False
+func Unescape(s string) string {
+	res :=  ""
+	esc := false
 
-    return res
+	for _, i in range s {
+		if i == '\\' && esc == false {
+			esc = true
+		} else if i == '\\' && esc == true {
+			res += "\\"
+			esc = false
+		} else if i == "n" && esc == true {
+			res += "\n"
+			esc = false
+		} else if i == '"' && esc == true {
+			res += '"'
+			esc = false
+		} else {
+			res += i
+			esc = false
+		}
+	}
 
-def escape(s):
-    res =  ""
-    for i in s:
-        if i == "\\":
-            res += "\\\\"
-        elif i == '"':
-            res += '\\"'
-        elif i == '\n':
-            res += '\\n'
-        else:
-            res += i
+	return res
+}
 
-    return res
+func Escape(s string) string {
+	res =  ""
+	for _, i in range s {
+		if i == "\\" {
+			res += "\\\\"
+		} else if i == '"' {
+			res += '\\"'
+		} else if i == '\n' {
+			res += '\\n'
+		} else {
+			res += i
+		}
+	}
 
-def pr_str(x, readably):
-    return escape(x) if readably else x
+	return res
+}
 
-def display(x, readably):
+func PrStr(x string, readably bool) string {
+     if readably {
+	     return Escape(x)
+     } else {
+	     return x
+     }
+}
+
+func Display(x *BType, readably bool) string {
     if isinstance(x, bool):
         return "true" if x is True else "false"
 
@@ -110,20 +122,29 @@ def display(x, readably):
         return "nil"
 
     return x
+}
 
-def parse(data):
+func Parse(data) {
     tree = l.parse(data)
     return ToAst().transform(tree)
+}
 
-def prnt(e):
+func Prnt(e) {
     sys.stdout.write(display(e, True))
     sys.stdout.write("\n")
+}
 
+func Input(repl string) {
+}
 
-if __name__ == "__main__":
-    while True:
-        try:
-            res = prnt(parse(input("basilisk> ")))
-            print(res if res != None else "nil")
-        except Exception as e:
-            print("EOF: {}".format(e))
+func main() {
+    for {
+	res, err = Prnt(Parse(Input("basilisk> ")))
+	if err != nil {
+		print("EOF: {}".format(e))
+		continue
+	}
+
+	print(res if res != nil else "nil")
+    }
+}
