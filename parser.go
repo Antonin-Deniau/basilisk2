@@ -27,8 +27,6 @@ parser = participle.MustBuild(&Program{},
     participle.Elide("Comment", "Whitespace"),
 )
 
-l = Lark(rules, parser='lalr', start="start")
-
 def unescape(s):
     res =  ""
     esc = False
@@ -66,26 +64,6 @@ def escape(s):
 
 def pr_str(x, readably):
     return escape(x) if readably else x
-
-class ToAst(Transformer):
-    start = lambda _,x: x[0] if len(x) else None
-    list = tuple
-    vector = lambda _,x: list(x)
-
-    nil = lambda _,x: None
-    variadic = lambda _,x: Name("&")
-    number = lambda _,x: float(x[0].value) if x[0].value.find(".") != -1 else int(x[0].value) 
-    boolean = lambda _,x: x[0] == "true"
-    name = lambda _,x: Name(x[0].value)
-    string = lambda _, x: unescape(x[0][1:-1])
-    deref = lambda _,x: tuple([Name("deref"), *x])
-    metadata = lambda _,x: tuple([Name("with-meta"), x[1], x[0]])
-    hashmap = lambda _,x: { i[0]: i[1] for i in zip(list(x[::2]), list(x[1::2])) }
-    keyword = lambda _,x: Keyword(x[0].value)
-    quote = lambda _,x: tuple([Name("quote"), *x])
-    quasiquote = lambda _,x: tuple([Name("quasiquote"), *x])
-    unquote = lambda _,x: tuple([Name("unquote"), *x])
-    spliceunquote = lambda _,x: tuple([Name("splice-unquote"), *x])
 
 def display(x, readably):
     if isinstance(x, bool):

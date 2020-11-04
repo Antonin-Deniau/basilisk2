@@ -22,12 +22,23 @@ type BType struct {
 	BSpliceUnquote *BSpliceUnquote `| @@`
 	BUnquote       *BUnquote       `| @@`
 	BName          *BName          `| @@`
+	BBoolean       *BBoolean       `| @@`
 	BVariadic      *BVariadic      `| "&"`
+	BNil           *BNil           `| @Nil`
+}
+
+type BNil struct {
+	Pos lexer.Position
 }
 
 type BVariadic struct {
 	Pos lexer.Position
+}
 
+type BBoolean struct {
+	Pos lexer.Position
+
+	Value bool `@Bool`
 }
 
 type BList struct {
@@ -96,6 +107,11 @@ type BString struct {
 	Value string `@String`
 }
 
+func (t *BString) Capture(s []string) error {
+	*t.Value = Unescape(s[0])
+	return nil
+}
+
 type BNumber struct {
 	Pos lexer.Position
 
@@ -116,6 +132,7 @@ type BKeyword struct {
 
 // NON PARSABLE
 
+/*
 type BFn struct {
 	Ast     *BType
 	Params  []*BType
@@ -134,11 +151,13 @@ func NewBFn() {
         self.is_macro = is_macro
         self.meta = None
 }
+*/
 
 type BAtom struct {
 	Value *BType
 }
 
+/*
 func NewBAtom() {
     def __init__(self, data):
         self.data = data
@@ -160,3 +179,4 @@ func NewBException() {
         self.is_raw = isinstance(parent, Exception)
         self.message = str(parent) if self.is_raw else parent
 }
+*/
