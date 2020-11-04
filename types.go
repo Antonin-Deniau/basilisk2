@@ -9,11 +9,25 @@ import (
 type BType struct {
 	Pos lexer.Position
 	
-	BNumber   *BNumber   `@@`
-	BKeyword  *BKeyword  `| @@`
-	BString   *BString   `| @@`
-	BList     *BList     `| @@`
-	BMetadata *BMetadata `| @@`
+	BNumber        *BNumber        `@@`
+	BKeyword       *BKeyword       `| @@`
+	BString        *BString        `| @@`
+	BList          *BList          `| @@`
+	BMetadata      *BMetadata      `| @@`
+	BDeref         *BDeref         `| @@`
+	BHashMap       *BHashMap       `| @@`
+	BVector        *BVector        `| @@`
+	BQuote         *BQuote         `| @@`
+	BQuasiquote    *BQuasiquote    `| @@`
+	BSpliceUnquote *BSpliceUnquote `| @@`
+	BUnquote       *BUnquote       `| @@`
+	BName          *BName          `| @@`
+	BVariadic      *BVariadic      `| "&"`
+}
+
+type BVariadic struct {
+	Pos lexer.Position
+
 }
 
 type BList struct {
@@ -122,7 +136,7 @@ func NewBFn() {
 }
 
 type BAtom struct {
-	Data *BType
+	Value *BType
 }
 
 func NewBAtom() {
@@ -141,7 +155,7 @@ type BException {
 	Message *BType
 }
 
-func () NewBException() {
+func NewBException() {
     def __init__(self, parent):
         self.is_raw = isinstance(parent, Exception)
         self.message = str(parent) if self.is_raw else parent

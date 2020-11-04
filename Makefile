@@ -1,3 +1,8 @@
+gobuild:
+
+gotest:
+	./runtest.py --debug=test tests/step2_eval.mal ./basilisk
+
 test2:
 	./runtest.py --debug=test tests/step2_eval.mal ./basilisk
 

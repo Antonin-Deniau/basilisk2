@@ -10,69 +10,22 @@ type Program struct {
 	Lines []*BType `@@*`
 }
 
+graphQLLexer = lexer.Must(stateful.New(stateful.Rules{
+	"Root": {
+		{"Comment", `;.*(?=(\n|$))`, nil },
+		{"Ident", "[^\"^.@~`\\[\\]:{}&'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*", nil },
+		{"Number", `-?\d+(\.\d+)?`, nil },
+		{"Whitespace", `(\s|\t|\n|,|\r)+`, nil },
+		{"String", `"(\.|[^"\\])*"`, nil },
+		{"Nil", `nil`, nil },
+		{"Bool", `true|false`, nil },
+	}
+))
 
-	sqlLexer = lexer.Must(lexer.Regexp(
-		`(\s+)` +
-		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
-		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
-		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Operators><>|!=|<=|>=|[-+*/%,.()=<>])`,
-	))
-
-
-
-rules=r'''
-?start: obj |
-
-?obj: list
-    | metadata
-    | deref
-    | hashmap
-    | vector
-    | keyword
-    | quote
-    | quasiquote
-    | spliceunquote
-    | unquote
-    | COMMA
-    | TOKEN -> name
-    | COMMENT
-    | NUM -> number
-    | BOOLEAN -> boolean
-    | string
-    | variadic
-    | NIL -> nil
-
-list: "(" obj* ")"
-metadata: "^" obj obj
-deref: "@" obj
-hashmap: "{" ((keyword|string) obj)* "}"
-vector: "[" obj* "]"
-keyword: ":" TOKEN
-quote: "'" obj
-quasiquote: "`" obj
-unquote: "~" obj
-spliceunquote: "~@" obj
-string: ESCAPED_STRING
-variadic: "&"
-
-NIL.5: /nil(?!\?)/
-BOOLEAN.5: /(true|false)(?!\?)/
-NUM.5: "-"?NUMBER
-
-COMMENT: /;.*(?=(\n|$))/
-COMMA: ","
-
-TOKEN: /[^"^.@~`\[\]:{}&'0-9\s,();][^"^@~`\[\]:{}\s();]*/
-
-ESCAPED_STRING: /"(\\.|[^"\\])*"/
-
-%import common.NUMBER
-%import common.WS
-%ignore WS
-%ignore COMMENT
-%ignore COMMA
-'''
+parser = participle.MustBuild(&Program{},
+    participle.Lexer(graphQLLexer),
+    participle.Elide("Comment", "Whitespace"),
+)
 
 l = Lark(rules, parser='lalr', start="start")
 
