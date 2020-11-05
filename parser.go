@@ -1,7 +1,16 @@
 package main
 
 import (
+	"github.com/alecthomas/participle/lexer/stateful"
 	"github.com/alecthomas/participle/lexer"
+	"github.com/alecthomas/participle"
+	"fmt"
+	"os/user"
+	"strings"
+	"errors"
+	"log"
+	"github.com/chzyer/readline"
+	"unicode/utf8"
 )
 
 type Program struct {
@@ -10,63 +19,46 @@ type Program struct {
 	Lines []*BType `@@*`
 }
 
-graphQLLexer = lexer.Must(stateful.New(stateful.Rules{
-	"Root": {
-		{"Comment", `;.*(?=(\n|$))`, nil },
-		{"Ident", "[^\"^.@~`\\[\\]:{}&'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*", nil },
-		{"Number", `-?\d+(\.\d+)?`, nil },
-		{"Whitespace", `(\s|\t|\n|,|\r)+`, nil },
-		{"String", `"(\.|[^"\\])*"`, nil },
-		{"Nil", `nil`, nil },
-		{"Bool", `true|false`, nil },
-	}
-))
-
-parser = participle.MustBuild(&Program{},
-    participle.Lexer(graphQLLexer),
-    participle.Elide("Comment", "Whitespace"),
-)
-
 func Unescape(s string) string {
-	res :=  ""
+	var res strings.Builder
 	esc := false
 
-	for _, i in range s {
+	for _, i := range s {
 		if i == '\\' && esc == false {
 			esc = true
-		} else if i == '\\' && esc == true {
-			res += "\\"
+		} else if i == '\\' && esc == true {
+			res.WriteRune('\\')
 			esc = false
-		} else if i == "n" && esc == true {
-			res += "\n"
+		} else if i == 'n' && esc == true {
+			res.WriteRune('\n')
 			esc = false
-		} else if i == '"' && esc == true {
-			res += '"'
+		} else if i == '"' && esc == true {
+			res.WriteRune('"')
 			esc = false
-		} else {
-			res += i
+		} else {
+			res.WriteRune(i)
 			esc = false
 		}
 	}
 
-	return res
+	return res.String()
 }
 
 func Escape(s string) string {
-	res =  ""
-	for _, i in range s {
-		if i == "\\" {
-			res += "\\\\"
+	var res strings.Builder
+	for _, i := range s {
+		if i == '\\' {
+			res.WriteString("\\\\")
 		} else if i == '"' {
-			res += '\\"'
+			res.WriteString("\\\"")
 		} else if i == '\n' {
-			res += '\\n'
-		} else {
-			res += i
+			res.WriteString("\\n")
+		} else {
+			res.WriteRune(i)
 		}
 	}
 
-	return res
+	return res.String()
 }
 
 func PrStr(x string, readably bool) string {
@@ -77,74 +69,200 @@ func PrStr(x string, readably bool) string {
      }
 }
 
-func Display(x *BType, readably bool) string {
-    if isinstance(x, bool):
-        return "true" if x is True else "false"
+func Display(x interface{}, readably bool) (string, error) {
+	switch val := x.(type) {
+	case BBoolean:
+		if val.Value {
+			return "true", nil
+		} else {
+			return "false", nil
+		}
 
-    if isinstance(x, types.LambdaType):
-        return "#<function>"
+	/*
+	case BFunc:
+		return "#<function>"
+	*/
 
-    if isinstance(x, Fn):
-        return "#<function>"
+	case BList:
+		var res strings.Builder
 
-    if isinstance(x, tuple):
-        return "({})".format(" ".join([display(r, readably) for r in x]))
+		for _, s := range val.Values {
+			o, err := Display(s, readably)
+			if err != nil {
+				return "", err
+			}
+			res.WriteString(o)
+			res.WriteString(" ")
+		}
 
-    if isinstance(x, int):
-        return repr(x)
+		r, size := utf8.DecodeLastRuneInString(res.String())
+		if r == utf8.RuneError && (size == 0 || size == 1) {
+			size = 0
+		}
 
-    if isinstance(x, float):
-        return repr(x)
+		return fmt.Sprintf("(%s)", res.String()[:len(res.String())-size]), nil
 
-    if isinstance(x, str):
-        return "\"{}\"".format(pr_str(x, readably)) if readably else x
+	case BNumber:
+		return fmt.Sprintf("%f", val.Value), nil
 
-    if isinstance(x, list):
-        return "[{}]".format(" ".join([display(s, readably) for s in x]))
+	case BString:
+		if readably {
+			return fmt.Sprintf("\"%s\"", PrStr(val.Value, readably)), nil
+		} else {
+			return val.Value, nil
+		}
 
-    if isinstance(x, dict):
-        return "{{{}}}".format(
-                " ".join(["{} {}".format(display(k, readably), display(v, readably)) for k,v in x.items()]))
+	case BVector:
+		var res strings.Builder
 
-    if isinstance(x, Keyword):
-        return ":{}".format(x.name)
+		for _, s := range val.Values {
+			o, err := Display(s, readably)
+			if err != nil {
+				return "", err
+			}
+			res.WriteString(o)
+			res.WriteString(" ")
+		}
 
-    if isinstance(x, BaslException):
-        return display(x.message, readably)
+		r, size := utf8.DecodeLastRuneInString(res.String())
+		if r == utf8.RuneError && (size == 0 || size == 1) {
+			size = 0
+		}
 
-    if isinstance(x, Name):
-        return x.name
+		return fmt.Sprintf("[%s]", res.String()[:len(res.String())-size]), nil
 
-    if isinstance(x, Atom):
-        return "(atom {})".format(display(x.data, readably))
+	case BHashMap:
+		var res strings.Builder
 
-    if x is None:
-        return "nil"
+		for _, s := range val.Map {
+			o, err := Display(s.Key, readably)
+			res.WriteString(o)
+			if err != nil {
+				return "", err
+			}
+			res.WriteString(" ")
+			o1, err1 := Display(s.Value, readably)
+			res.WriteString(o1)
+			if err1 != nil {
+				return "", err1
+			}
+			res.WriteString(" ")
+		}
 
-    return x
+		r, size := utf8.DecodeLastRuneInString(res.String())
+		if r == utf8.RuneError && (size == 0 || size == 1) {
+			size = 0
+		}
+
+		return fmt.Sprintf("{%s}", res.String()[:len(res.String())-size]), nil
+	
+	case BKeyword:
+		return fmt.Sprintf(":%s", val.Value), nil
+
+	/*
+	case BException:
+		return Display(val.Message, readably)
+	*/
+
+	case BName:
+		return val.Value, nil
+
+	/*
+	case BAtom:
+		return "(atom {})".format(Display(val.data, readably))
+	*/
+	case BNil:
+		return "nil", nil
+
+	default:
+		return "", errors.New(fmt.Sprintf("Unable to display: %+v", val))
+	}
 }
 
-func Parse(data) {
-    tree = l.parse(data)
-    return ToAst().transform(tree)
+/*
+func ParseFile(data string) (*Program) {
+	tree := &Program{}
+	err := parser.ParseString(data, tree)
+	if err != nil {
+		return err, nil
+	}
+
+	return nil, tree
+}
+*/
+
+func Parse(data string, parser *participle.Parser) (*BType, error) {
+	tree := &BType{}
+	err := parser.ParseString(data, tree)
+	if err != nil {
+		return nil, err
+	}
+
+	return tree, nil
 }
 
-func Prnt(e) {
-    sys.stdout.write(display(e, True))
-    sys.stdout.write("\n")
+func Prnt(e *BType) (error) {
+	val, err := Display(e, true)
+	if err != nil {
+		return err
+	}
+	fmt.Print(val + "\n")
+	return nil
 }
 
-func Input(repl string) {
+func getParser() (*participle.Parser) {
+	graphQLLexer := lexer.Must(stateful.New(stateful.Rules{
+		"Root": {
+			{"Comment", `;.*(?=(\n|$))`, nil },
+			{"Ident", "[^\"^.@~`\\[\\]:{}&'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*", nil },
+			{"Number", `-?\d+(\.\d+)?`, nil },
+			{"Whitespace", `(\s|\t|\n|,|\r)+`, nil },
+			{"String", `"(\.|[^"\\])*"`, nil },
+			{"Nil", `nil`, nil },
+			{"Bool", `true|false`, nil },
+		},
+	}))
+
+	return participle.MustBuild(&Program{},
+	    participle.Lexer(graphQLLexer),
+	    participle.Elide("Comment", "Whitespace"),
+	)
 }
 
 func main() {
-    for {
-	res, err = Prnt(Parse(Input("basilisk> ")))
+	// INIT READLINE CONFIG
+	usr, err := user.Current()
 	if err != nil {
-		print("EOF: {}".format(e))
-		continue
+		log.Fatal( err )
 	}
 
-	print(res if res != nil else "nil")
-    }
+	config := &readline.Config{
+		Prompt: "basilisk> ",
+		HistoryFile: usr.HomeDir + "/.basilisk_history",
+	}
+	rl, err := readline.NewEx(config)
+
+	if err != nil {
+		panic(err)
+	}
+	defer rl.Close()
+
+	parser := getParser()
+
+
+	for {
+		line, err := rl.Readline()
+		if err != nil { // io.EOF
+			log.Print(fmt.Sprintf("Exception: %s", err))
+			break
+		}
+
+		err1 := Prnt(Parse(line, parser))
+		if err1 != nil {
+			log.Print(fmt.Sprintf("Exception: %s", err1))
+		}
+
+		rl.SaveHistory(line)
+	}
 }
+

@@ -74,7 +74,7 @@ type BHashMapEntry struct {
 type BVector struct {
 	Pos lexer.Position
 
-	Values *BType `"[" @@* "]"`
+	Values []*BType `"[" @@* "]"`
 }
 
 type BQuote struct {
@@ -108,7 +108,7 @@ type BString struct {
 }
 
 func (t *BString) Capture(s []string) error {
-	*t.Value = Unescape(s[0])
+	t.Value = Unescape(s[0])
 	return nil
 }
 
