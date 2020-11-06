@@ -9,7 +9,10 @@ import (
 type BType struct {
 	Pos lexer.Position
 	
-	BNumber        *BNumber        `@@`
+	BNil           *BNil           `  @@`
+	BVariadic      *BVariadic      `| @@`
+	BBoolean       *BBoolean       `| @@`
+	BNumber        *BNumber        `| @@`
 	BKeyword       *BKeyword       `| @@`
 	BString        *BString        `| @@`
 	BList          *BList          `| @@`
@@ -22,23 +25,25 @@ type BType struct {
 	BSpliceUnquote *BSpliceUnquote `| @@`
 	BUnquote       *BUnquote       `| @@`
 	BName          *BName          `| @@`
-	BBoolean       *BBoolean       `| @@`
-	BVariadic      *BVariadic      `| "&"`
-	BNil           *BNil           `| @Nil`
 }
 
 type BNil struct {
 	Pos lexer.Position
+
+	Value bool `@"nil"`
 }
 
 type BVariadic struct {
 	Pos lexer.Position
+
+	Value bool `@"-"`
+	//Value bool `@Coalesce`
 }
 
 type BBoolean struct {
 	Pos lexer.Position
 
-	Value bool `@Bool`
+	Value bool `@( "true" | "false" )`
 }
 
 type BList struct {
@@ -49,7 +54,7 @@ type BList struct {
 
 type BMetadata struct {
 	Metadata *BType `"^" @@`
-	Value    *BType ` @@`
+	Value    *BType ` @@`
 }
 
 type BDeref struct {
@@ -105,11 +110,6 @@ type BString struct {
 	Pos lexer.Position
 
 	Value string `@String`
-}
-
-func (t *BString) Capture(s []string) error {
-	t.Value = Unescape(s[0])
-	return nil
 }
 
 type BNumber struct {

@@ -78,6 +78,8 @@ def pr_str(*a):
     return " ".join([display(i, True) for i in a])
 
 ns = {
+    '&&': lambda a,b: a and b,
+    'ord': lambda a: ord(a),
     '+': lambda a,b: a+b,
     '-': lambda a,b: a-b,
     '*': lambda a,b: a*b,

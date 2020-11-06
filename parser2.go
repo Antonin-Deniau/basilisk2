@@ -1,22 +1,13 @@
 package main
 
 import (
-	"github.com/alecthomas/participle/lexer/stateful"
-	"github.com/alecthomas/participle/lexer"
-	"github.com/alecthomas/participle"
 	"fmt"
 	"os/user"
-	"strings"
 	"log"
 	"github.com/chzyer/readline"
+	"strings"
 	"unicode/utf8"
 )
-
-type Program struct {
-	Pos lexer.Position
-
-	Lines []*BType `@@*`
-}
 
 func Unescape(s string) string {
 	// strconv.Unquote
@@ -61,12 +52,63 @@ func Escape(s string) string {
 	return res.String()
 }
 
+
 func PrStr(x string, readably bool) string {
      if readably {
 	     return Escape(x)
      } else {
 	     return x
      }
+}
+
+func InitParser() *BType {
+	blist := NewExpr("(", Repeat(Token("expr")), ")")
+	bmetadata := NewExpr("^", Token("expr"), Token("expr"))
+	bderef := NewExpr("@", Token("expr"))
+	bhashmap := NewExpr("{", Repeat(Token("expr")), "}")
+	bvector := NewExpr("[", Repeat(Token("expr")), "]")
+	bkeyword := NewRegex(":[^\"^.@~`\\[\\]:{}&'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*")
+	bquote := NewExpr("'", Token("expr"))
+	bquasiquote := NewExpr("`", Token("expr"))
+
+	root := NewRoot(
+		blist,
+		bmetadata,
+		bderef,
+		bhashmap,
+		bvector,
+		bkeyword,
+		bquote,
+		bquasiquote,
+		bspliceunquote,
+		bunquote,
+		bunquote,
+		bcomma,
+		btoken,
+		bcomment,
+		bnumber,
+		bboolean,
+		bstring,
+		bvariadic,
+		bnil,
+	)
+	ignore := NewIgnore()
+
+	return NewParser(root, ignore)
+}
+
+func Parse(data *string, parser *BType) (*BType, error) {
+	index := 0
+	parserState := InitParser()
+	totalLen := len(*data)
+
+	for index < totalLen {
+		for _, x := range parser.BList.Values {
+
+		}
+	}
+
+	return nil, nil// TODO
 }
 
 func betterFormat(num float64) string {
@@ -190,30 +232,6 @@ func Display(x *BType, readably bool) (string, error) {
 	panic(fmt.Sprintf("Unable to display: %+v", x))
 }
 
-/*
-func ParseFile(data string) (*Program) {
-	tree := &Program{}
-	err := parser.ParseString(data, tree)
-	if err != nil {
-		return err, nil
-	}
-
-	return nil, tree
-}
-*/
-
-func Parse(data string, parser *participle.Parser) (*BType, error) {
-	tree := &BType{}
-	err := parser.ParseString(data, tree)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("%+v", tree)
-
-	return tree, nil
-}
-
 func Prnt(e *BType) (error) {
 	val, err := Display(e, true)
 	if err != nil {
@@ -221,26 +239,6 @@ func Prnt(e *BType) (error) {
 	}
 	fmt.Print(val + "\n")
 	return nil
-}
-
-func getParser() (*participle.Parser) {
-	lex := lexer.Must(stateful.New(stateful.Rules{
-		"Root": {
-			{"Comment", `;.*(\n|$)`, nil },
-			{"String", `"([^"\\]|\\.)*"`, nil},
-			{"Ident", "\\b[^\"^.@~`\\[\\]:{}&'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*\\b", nil },
-			{"Number", `-?\d+(\.\d+)?`, nil },
-			{"Whitespace", `(\s|\t|\n|,|\r)+`, nil },
-			{"Coalesce", `&`, nil},
-			{"Colon", `:`, nil},
-		},
-	}))
-
-	return participle.MustBuild(&BType{},
-		participle.Lexer(lex),
-		participle.Elide("Comment", "Whitespace", "Colon"),
-		participle.Unquote("String"),
-	)
 }
 
 func main() {
@@ -261,9 +259,7 @@ func main() {
 	}
 	defer rl.Close()
 
-	parser := getParser()
-
-	fmt.Printf("%s\n\n", parser.String())
+	parser := InitParser()
 
 	for {
 		line, err := rl.Readline()
@@ -272,7 +268,7 @@ func main() {
 			break
 		}
 
-		res, err1 := Parse(line, parser)
+		res, err1 := Parse(&line, parser)
 		if err1 != nil {
 			log.Print(fmt.Sprintf("Exception: %s", err1))
 		} else {
