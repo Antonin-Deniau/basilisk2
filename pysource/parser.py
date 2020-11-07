@@ -48,7 +48,7 @@ NUM.5: "-"?NUMBER
 COMMENT: /;.*(?=(\n|$))/
 COMMA: ","
 
-TOKEN: /[^"^.@~`\[\]:{}&'0-9\s,();][^"^@~`\[\]:{}\s();]*/
+TOKEN: /[^"^.@~`\[\]:{}'0-9\s,();][^"^@~`\[\]:{}\s();]*/
 
 ESCAPED_STRING: /"(\\.|[^"\\])*"/
 
@@ -167,7 +167,8 @@ def display(x, readably):
 
 def parse(data):
     tree = l.parse(data)
-    return ToAst().transform(tree)
+    a =  ToAst().transform(tree)
+    return a
 
 def prnt(e):
     sys.stdout.write(display(e, True))

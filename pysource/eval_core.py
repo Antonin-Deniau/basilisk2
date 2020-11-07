@@ -51,11 +51,16 @@ def macroexpand(ast, env):
 
 def evl(ast, env):
     while True:
+        #print(ast)
         if isinstance(ast, tuple):
             if len(ast) == 0: return ast
 
             ast = macroexpand(ast, env)
             if not isinstance(ast, tuple): return eval_ast(ast, env)
+
+            if isinstance(ast[0], Keyword):
+                hm = evl(ast[1], env)
+                return hm[ast[0].name]
 
             if isinstance(ast[0], Name):
                 if ast[0].name == "def!":
