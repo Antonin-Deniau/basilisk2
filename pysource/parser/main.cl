@@ -16,15 +16,16 @@
 				  state
 				  ))))))
 
-(def! choose (fn* [args]
+(def! choose (fn* [& args]
 	(fn* [state]
 		(if (= (count args) 0)
 			{ :valid false :message (prn "Could not find matching rules in: " args)}
 
-			(let* [res ((get (first args)) state)]
-				(if (true? (get res :valid))
-				  res
-				  (choose (rest args) state)))))))
+			(let* [res (apply (first args) state)]
+				(if (= res state)
+					((apply choose (rest args)) state)
+					res
+					))))))
 
 (def! repeat (fn* []
 	 1
@@ -95,10 +96,15 @@
 	(choose blist
 		bkeyword)))
 
+(def! test (choose (char "5")
+		   (char "6")
+		   (char "0")))
+
 ; ENV
 (def! data "6969antonin (1 2 4 \"lol\" nil true)")
 (def! state { :data data :ast "" })
-
 (prn state)
-(prn ((char "6") state))
+(prn (test state))
+
+
 
