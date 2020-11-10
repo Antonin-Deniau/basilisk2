@@ -13,23 +13,24 @@
 					:data (subs (:data state) 1)
 					:ast (str (:ast state) c)
 				  }
-				  state
-				  ))))))
+				  state))))))
 
 (def! choose (fn* [& args]
 	(fn* [state]
 		(if (= (count args) 0)
-			{ :valid false :message (prn "Could not find matching rules in: " args)}
+			{ :valid false :message (str "Could not find matching rules in: " args)}
 
 			(let* [res (apply (first args) state)]
 				(if (= res state)
 					((apply choose (rest args)) state)
-					res
-					))))))
+					res))))))
 
-(def! repeat (fn* []
-	 1
-))
+(def! repeat (fn* [fnc arg]
+	(fn* [state]
+		(let* [res (arg state)]
+			(if (= res state)
+				res
+				{ :data (fnc (:data res) ()) :ast () })))))
 
 ; SYNTAX
 
@@ -70,7 +71,8 @@
 				state)))))
 
 (def! whitespace (fn* [state]
-	(choose (char "\n")
+	(choose ;comment
+		(char "\n")
 	  	(char "\t")
 		(char " ")
 		(char ","))))
@@ -96,15 +98,15 @@
 	(choose blist
 		bkeyword)))
 
-(def! test (choose (char "5")
-		   (char "6")
-		   (char "0")))
+(def! test (repeat list (char "6")))
+(def! test2 (repeat str (char "6")))
 
 ; ENV
-(def! data "6969antonin (1 2 4 \"lol\" nil true)")
+(def! data "666666969antonin (1 2 4 \"lol\" nil true)")
 (def! state { :data data :ast "" })
 (prn state)
 (prn (test state))
+(prn (test2 state))
 
 
 
