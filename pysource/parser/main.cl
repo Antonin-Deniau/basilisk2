@@ -13,8 +13,7 @@
 					:data (subs (:data state) 1)
 					:ast (str (:ast state) c)
 				  }
-				  state
-				  ))))))
+				  state))))))
 
 (def! choose (fn* [& args]
 	(fn* [state]
@@ -24,11 +23,23 @@
 			(let* [res (apply (first args) state)]
 				(if (= res state)
 					((apply choose (rest args)) state)
-					res
-					))))))
+					res))))))
 
-(def! repeat (fn* []
-	 1
+(def! repeat (fn* [typ fnc]
+	(fn* [state]
+		(let* [res (fnc state)]
+			(if (= res state)
+				state
+				(let* [resp ((repeat typ fnc) { :data (:data res) :ast ""})]
+				  { :data (:data resp) :ast (apply typ (cons (:ast res) (:ast resp))) })
+				)))))
+
+(def! sequence (fn* [& args]
+	1
+))
+
+(def! ignore (fn* []
+	1
 ))
 
 ; SYNTAX
@@ -69,39 +80,38 @@
 				})
 				state)))))
 
-(def! whitespace (fn* [state]
-	(choose (char "\n")
-	  	(char "\t")
-		(char " ")
-		(char ","))))
+(def! whitespace (choose (char "\n")
+			 (char "\t")
+			 (char " ")
+			 (char ",")))
 
-(def! blist (fn* []
-	(sequence (char "(")
-		  (repeat bexpr)
-		  (char ")"))))
+;(def! blist (sequence (char "(")
+;		      (repeat bexpr)
+;		      (char ")")))
 
-(def! bkeyword (fn* []
-	(sequence (char ":")
-		  (choose alpha
-			  ALPHA
-			  (char "_") 
-			  (char "-"))
-		  (repeat (choose alpha
-				  ALPHA
-				  nums
-				  (char "_") 
-				  (char "-"))))))
+;(def! bexpr (choose blist
+;		    bkeyword))
 
-(def! bexpr (fn* []
-	(choose blist
-		bkeyword)))
 
-(def! test (choose (char "5")
-		   (char "6")
-		   (char "0")))
+(def! bkeyword (sequence (char ":")
+		         (choose alpha
+				 ALPHA
+				 (char "_") 
+				 (char "-"))
+		         (repeat vector (choose alpha
+					        ALPHA
+					        nums
+					        (char "_") 
+					        (char "-")))))
+
+;(def! test (sequence (char "6")
+;		     (char "9")
+;		     (char "6")))
+(def! test (repeat vector (char "6")))
+
 
 ; ENV
-(def! data "6969antonin (1 2 4 \"lol\" nil true)")
+(def! data "666969antonin (1 2 4 \"lol\" nil true)")
 (def! state { :data data :ast "" })
 (prn state)
 (prn (test state))

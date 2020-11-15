@@ -61,13 +61,6 @@ func PrStr(x string, readably bool) string {
      }
 }
 
-func ParseRegex(x *BType) {
-	if x.(*BString) {
-		r := regexp.MustCompile(x.Value)
-	}
-}
-
-/*
 func Regex(regex string) {
 }
 
@@ -76,32 +69,20 @@ func Repeat() *BType {
 
 func NewErr() string {
 }
-*/
 
-func Choose(data string, entries *BType...) *BType {
+func Choose(entries *BType...) *BType {
 	for _, x := range entries {
-		if x.(*BList) {
-			if x.Values[0].(*BName) {
-				switch x.Value[0].Value {
-				case "regex":
-					return ParseRegex(x.Value[1])
-				//case "choose":
-				//case "sequence":
-				//case "char":
-				default:
-					return NewErr(fmt.Sprintf("Unkown function %s", x.Value[0].Value))
-				}
-			} else {
-				return NewErr(fmt.Sprintf("Not a good token %v+", x.Values[0]))
-			}
-		} else {
-			return NewErr(fmt.Sprintf("Not a good root type %v+", x))
+		data, err := x.Value()
+
+		switch os := runtime.GOOS; os {
+
+
+		if err != nil {
 		}
+
 	}
 }
 
-
-/*
 func InitParser() *BType {
 	blist       := NewBList(NewBName("list"),       Sequence(Chr("("), Repeat(Token("expr")), Chr(")"))))
 	bmetadata   := NewBList(NewBName("with-meta"),  Sequence(Chr("^"), NewBName("expr"), NewBName("expr")))
@@ -155,7 +136,6 @@ func Parse(data *string, parser *BType) (*BType, error) {
 
 	return nil, nil// TODO
 }
-*/
 
 func betterFormat(num float64) string {
     s := fmt.Sprintf("%.6f", num)

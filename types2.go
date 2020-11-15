@@ -2,86 +2,69 @@ package main
 
 // PARSABLE
 
+type BType {
+	Pos Position
+}
+
 type Position struct {
 	Line int
 	Col int
 }
 
-type BType struct {
-	Pos Position
-	
-	BNil           *BNil
-	BVariadic      *BVariadic
-	BBoolean       *BBoolean
-	BNumber        *BNumber
-	BKeyword       *BKeyword
-	BString        *BString
-	BList          *BList
-	BMetadata      *BMetadata
-	BDeref         *BDeref
-	BHashMap       *BHashMap
-	BVector        *BVector
-	BQuote         *BQuote
-	BQuasiquote    *BQuasiquote
-	BSpliceUnquote *BSpliceUnquote
-	BUnquote       *BUnquote
-	BName          *BName
-}
-
 type BNil struct {
-	Pos Position
+	BType
 
 	Value bool
 }
 
 type BVariadic struct {
-	Pos Position
+	BType
 }
 
 type BBoolean struct {
-	Pos Position
+	BType
 
 	Value bool
 }
 
 type BList struct {
-	Pos Position
+	BType
 
 	Values []*BType
 }
 
 type BMetadata struct {
+	BType
+
 	Metadata *BType
 	Value    *BType
 }
 
 type BDeref struct {
-	Pos Position
+	BType
 
 	Value *BType
 }
 
 type BHashMap struct {
-	Pos Position
+	BType
 
 	Map []*BHashMapEntry
 }
 
 type BHashMapEntry struct {
-	Pos Position
-
 	Key   *BType
 	Value *BType
 }
 
 type BVector struct {
-	Pos Position
+	BType
 
 	Values []*BType
 }
 
 type BQuote struct {
-	Pos Position
+	BType
 
 	Value *BType
 }
