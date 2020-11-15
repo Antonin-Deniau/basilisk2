@@ -18,7 +18,7 @@
 (def! choose (fn* [& args]
 	(fn* [state]
 		(if (= (count args) 0)
-			{ :valid false :message (prn "Could not find matching rules in: " args)}
+			{ :valid false :message (str "Could not find matching rules in: " args)}
 
 			(let* [res (apply (first args) state)]
 				(if (= res state)
@@ -111,7 +111,7 @@
 
 
 ; ENV
-(def! data "666969antonin (1 2 4 \"lol\" nil true)")
+(def! data "666666969antonin (1 2 4 \"lol\" nil true)")
 (def! state { :data data :ast "" })
 (prn state)
 (prn (test state))
