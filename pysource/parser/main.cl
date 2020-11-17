@@ -29,15 +29,18 @@
 				  	:data (:data resp)
 					:ast (apply typ (cons (:ast res) (:ast resp))) }))))))
 
-(def! sequence (fn* [& args]
+(def! sequence (fn* [typ & args]
 	(fn* [state & orig]
-		(let* [res (apply (first args) state)]
+		(let* [o (if (= orig ()) state (first orig))
+		       res (apply (first args) state)]
 			(if (= (count args) 1)
 				res
 				(if (= res state)
-					(if (= orig ()) state (first orig)) ; RETURN ORIGINAL
-					((apply sequence (rest args)) res (if (= orig ()) state (first orig)))
-					))))))
+					o ; RETURN ORIGINAL
+					(let* [resp ((apply sequence (rest args)) res o)]
+						{ 
+							:data (:data resp)
+							:ast (apply typ (cons (:ast res) (:ast resp))) })))))))
 
 ; SYNTAX
 
@@ -101,7 +104,8 @@
 					        (char "_") 
 					        (char "-")))))
 
-(def! test (sequence (char "6")
+(def! test (sequence vector
+		     (char "6")
 		     (char "9")
 		     (char "6")))
 
