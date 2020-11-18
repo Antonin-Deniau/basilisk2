@@ -50,7 +50,7 @@
 (def! sequence (fn* [typ & fncs]
 	(fn* [state & orig]
 		(let* [o (if (= (count orig) 0) state (first orig))
-			 res (sequence_inside state typ fncs)]
+			 res (apply sequence_inside state typ fncs)]
 		  (if (= (:valid res) true) res o)))))
 
 ; SYNTAX
