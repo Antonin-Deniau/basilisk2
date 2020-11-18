@@ -1,8 +1,10 @@
 ; UTILS
-(def! add_ast (fn* [prev next]
+(def! add_ast (fn* [typ prev next]
 	{
-		:state (:state next)
-		:ast (cons (:ast prev) (:ast next)]
+		:data (:data next)
+		:ast (if (= (:ast prev nil) nil)
+		  	(:ast next)
+			(apply typ (:ast prev) (:ast next)))
 	}))
 
 (def! char (fn* [cha]
@@ -37,29 +39,19 @@
 					:ast (apply typ (cons (:ast res) (:ast resp))) }))))))
 
 
-(def! sequence_inside (fn* [state i & fncs]
+(def! sequence_inside (fn* [state typ & fncs]
 	(if (= (count fncs) 0)
-	  { :state state :num i }
+	  { :data (:data state) :valid true :ast (:ast state) }
 	  (let* [res ((first fncs) state)]
-	    (if (= res state)
-	      { :state res :num i }
-	      (apply sequence_inside { :state (res) :ast [] } (+ i 1) (rest fncs)))))))
+	    (if (= (:data res) (:data state))
+	      { :data res :valid false :ast (:ast state) }
+	      (apply sequence_inside (add_ast typ state res) typ (rest fncs)))))))
 
-(def! sequence (fn* [typ & args]
+(def! sequence (fn* [typ & fncs]
 	(fn* [state & orig]
 		(let* [o (if (= (count orig) 0) state (first orig))
-		       res (apply (first args) state)]
-			(if (= (count args) 0)
-				state
-				(if (= res state)
-					o ; RETURN ORIGINAL
-					(let* [resp ((apply sequence (rest args)) res o)]
-						(if (= resp res)
-							o ; RETURN ORIGINAL
-							{ 
-								:data (:data resp)
-								:ast (apply typ (cons (:ast res) (:ast resp))) 
-							}))))))))
+			 res (sequence_inside state typ fncs)]
+		  (if (= (:valid res) true) res o)))))
 
 ; SYNTAX
 
@@ -123,18 +115,15 @@
 					        (char "_") 
 					        (char "-")))))
 
-;(def! test (sequence vector
-;		     (char "6")
-;		     (char "9")
-;		     (char "6")))
-
-; ENV
-(def! data "6969antonin (1 2 4 \"lol\" nil true)")
-(def! state { :data data :ast "" })
-(prn state)
-(prn (sequence_inside state 0
+(def! test (sequence vector
 		     (char "6")
 		     (char "9")
 		     (char "6")))
+
+; ENV
+(def! data "6969antonin (1 2 4 \"lol\" nil true)")
+(def! state { :data data :ast nil })
+(prn state)
+(prn (test state))
 
 
