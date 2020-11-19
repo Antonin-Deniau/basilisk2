@@ -24,14 +24,14 @@
 		(if (= (count args) 0)
 			state ; RETURN UNCHANGED
 			(let* [res (apply (first args) state)]
-				(if (= (:state res) (:state state))
+				(if (= (:data res) (:data state))
 					((apply choose (rest args)) state) 
-					(add_ast state res)))))))
+					res))))))
 
 (def! repeat (fn* [typ fnc]
 	(fn* [state]
 		(let* [res (fnc state)]
-			(if (= (:state res) (:state state))
+			(if (= (:data res) (:data state))
 				state ; RETURN UNCHANGED
 				(let* [resp ((repeat typ fnc) { :data (:data res) :ast ""})]
 				  { 
@@ -91,17 +91,12 @@
 				})
 				state))))) ; RETURN UNCHANGED
 
-(def! whitespace (choose (char "\n")
-			 (char "\t")
-			 (char " ")
-			 (char ",")))
 
-;(def! blist (sequence (char "(")
-;		      (repeat bexpr)
-;		      (char ")")))
-
-;(def! bexpr (choose blist
-;		    bkeyword))
+;(def! whitespace (repeat (fn* [o a] o)
+;			 (choose (char " ")
+;				 (char "	")
+;				 (char "\n")
+;				 (char ","))))
 
 
 (def! bkeyword (sequence (char ":")
@@ -115,13 +110,11 @@
 					        (char "_") 
 					        (char "-")))))
 
-(def! test (sequence vector
-		     (char "6")
-		     (char "9")
-		     (char "6")))
+(def! test (repeat vector (choose (char "6")
+				  (char "9"))))
 
 ; ENV
-(def! data "6969antonin (1 2 4 \"lol\" nil true)")
+(def! data "696,,    	9antonin (1 2 4 \"lol\" nil true)")
 (def! state { :data data :ast nil })
 (prn state)
 (prn (test state))
