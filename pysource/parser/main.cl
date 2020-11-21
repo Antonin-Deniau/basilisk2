@@ -53,13 +53,14 @@
 			 res (apply sequence_inside state typ fncs)]
 		  (if (= (:valid res) true) res o)))))
 
-(def! ignore (fn* [func]
+(def! ignore (fn* [func fncs]
 		  (fn* [state]
-		       (let* [res (func state)]
-			 {
-			 	:data (:data res)
-				:ast nil
-			 }
+		       (let* [res (fncs state)]
+			 (let* [r (func res)] 
+				{
+					:data (:data r)
+					:ast (:ast res)
+				})
 		       ))))
 
 ; SYNTAX
@@ -101,11 +102,11 @@
 				state))))) ; RETURN UNCHANGED
 
 
-(def! whitespace (ignore (repeat str
-				 (choose (char " ")
-					 (char "	")
-					 (char "\n")
-					 (char ",")))))
+(def! whitespace (repeat str
+			 (choose (char " ")
+				 (char "	")
+				 (char "\n")
+				 (char ","))))
 
 
 (def! bkeyword (sequence (char ":")
@@ -119,11 +120,10 @@
 					        (char "_") 
 					        (char "-")))))
 
-(def! test (sequence vector
-		     (char "6")
-		     (char "9")
-		     (char "6")
-		     whitespace))
+(def! test (ignore whitespace (sequence vector
+			      (char "6")
+			      (char "9")
+			      (char "6"))))
 
 ; ENV
 (def! data "696,,    	9antonin (1 2 4 \"lol\" nil true)")
