@@ -1,5 +1,5 @@
 from functools import reduce
-import base64, time, types
+import base64, time, types, re
 
 from parser import display, parse
 from lark import UnexpectedInput, UnexpectedToken
@@ -145,4 +145,5 @@ ns = {
     'meta': lambda e: e.meta if hasattr(e, "meta") else None,
     'with-meta': with_meta,
     'seq': lambda e: tuple(e) if e != None and len(e) != 0 else None,
+    'regex': lambda p, s: re.match(p, s),
 }
