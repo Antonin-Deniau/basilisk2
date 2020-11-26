@@ -142,7 +142,13 @@
 ;(prn (read 1 2 3 4 5 6))
 ;(prn (read 1 2))
 
-(def! macro_chars { "(" parse_list })
+(defun! parse_list []
+        )
+
+(def! macro_chars {
+        "(" parse_list
+      })
+
 (prn macro_chars)
 
 (defun! read [stream]

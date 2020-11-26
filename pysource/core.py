@@ -24,6 +24,13 @@ def read_string(a):
     except Exception as e:
         raise BaslException(e)
 
+def regex_match(reg, text):
+    e = re.match(reg, text)
+    if e != None:
+        return [e.group(0), list(e.groups())]
+    else:
+        return None
+
 def prn(*a):
     print(" ".join([display(i, True) for i in a]))
     return None
@@ -145,5 +152,5 @@ ns = {
     'meta': lambda e: e.meta if hasattr(e, "meta") else None,
     'with-meta': with_meta,
     'seq': lambda e: tuple(e) if e != None and len(e) != 0 else None,
-    'regex': lambda p, s: re.match(p, s),
+    'regex-match': regex_match,
 }
