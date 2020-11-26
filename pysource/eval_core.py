@@ -50,6 +50,7 @@ def macroexpand(ast, env):
 ### EVAL PART ###
 
 def evl(ast, env):
+    #print(ast)
     while True:
         #print(ast)
         if isinstance(ast, tuple):
