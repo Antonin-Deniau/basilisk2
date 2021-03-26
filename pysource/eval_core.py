@@ -4,6 +4,8 @@ import types, traceback
 from basl_types import Fn, Name, BaslException, Keyword, Atom
 from environment import Env
 
+
+stack = []
 ### SYMBOLS ###
 
 def quasiquote_process_list(ast):
@@ -50,11 +52,12 @@ def macroexpand(ast, env):
 ### EVAL PART ###
 
 def evl(ast, env):
+    global stack
     #print(ast)
     while True:
         #print(ast)
         if isinstance(ast, tuple):
-            if len(ast) == 0: return ast
+            if len(ast) == 0: return  ast
 
             ast = macroexpand(ast, env)
             if not isinstance(ast, tuple): return eval_ast(ast, env)
@@ -95,6 +98,9 @@ def evl(ast, env):
                     except Exception as e:
                         new_env = Env(env, [ast[2][1].name], [str(e)])
                         return evl(ast[2][2], new_env)
+
+                if ast[0].name == "raise":
+                    raise BaslException(ast[1], env.stack)
 
                 if ast[0].name == "quote":
                     return ast[1]
@@ -142,7 +148,9 @@ def evl(ast, env):
             [f, *args] = eval_ast(ast, env)
 
             if isinstance(f, Fn):
-                ast, env = f.ast, Env(f.env, f.params, args); continue
+                s = "{}:{}:{}:{}".format(ast[0].file, ast[0].name, ast[0].line, ast[0].col) if isinstance(ast[0], Name) else "LAMBDA"
+                ast, env = f.ast, Env(f.env, f.params, args, s)
+                continue
 
             if isinstance(f, types.LambdaType):
                 return f(*args)
@@ -163,4 +171,3 @@ def eval_ast(ast, env):
         return tuple([evl(x, env) for x in ast])
 
     return ast
-

@@ -1,9 +1,13 @@
 from basl_types import Name, BaslException
 
 class Env:
-    def __init__(self, outer, binds, exprs):
+    def __init__(self, outer, binds, exprs, new_trace=None):
         self.outer = outer
         self.vals = {}
+        if outer != None:
+          self.stack = [*outer.stack, new_trace] if new_trace != None else outer.stack
+        else:
+          self.stack = []
 
         if len(binds) != len(exprs):
             if Name("&") not in binds:
@@ -38,4 +42,4 @@ class Env:
         if env is not None:
             return env.vals[name]
         else:
-            raise BaslException("{} not found".format("'{}'".format(name)))
+            raise BaslException("{} not found".format("'{}'".format(name)), env)

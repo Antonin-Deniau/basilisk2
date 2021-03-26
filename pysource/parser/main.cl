@@ -1,4 +1,4 @@
-(defmacro! defun! (fn* [name args body] `(def! ~name (fn* ~args ~body))))
+;(defmacro! defun! (fn* [name args body] `(def! ~name (fn* ~args ~body))))
 
 ; UTILS
 (def! add_ast (fn* [typ prev next]

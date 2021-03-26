@@ -63,9 +63,6 @@ def swap(a, b, *c):
     else:
         return a.reset(b(a.data, *c))
 
-def raiz(e):
-    raise BaslException(e)
-
 def ret_func(a):
     if isinstance(a, Fn):
         return a.fn
@@ -120,7 +117,6 @@ ns = {
     'nth': lambda a, i: a[i],
     'first': lambda a: a[0] if a != None and len(a) != 0 else None,
     'rest': lambda a: tuple(a[1:]) if a != None and len(a) != 0 else tuple(),
-    'throw': raiz,
     'apply': appl,
     'map': basl_map,
     'nil?': lambda e: isinstance(e, type(None)),

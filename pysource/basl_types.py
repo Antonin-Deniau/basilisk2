@@ -1,6 +1,9 @@
 class Name:
-    def __init__(self, name):
+    def __init__(self, name, file=None, line=None, col=None):
         self.name = name
+        self.file = file
+        self.line = line
+        self.col = col
 
     def __hash__(self):
         return hash(self.name)
@@ -31,7 +34,7 @@ class Fn:
         self.env = env
         self.fn = fn
         self.is_macro = is_macro
-        self.meta = None
+        self.meta = meta
 
 class Atom:
     def __init__(self, data):
@@ -42,6 +45,11 @@ class Atom:
         return a
 
 class BaslException(Exception):
-    def __init__(self, parent):
+    def __init__(self, parent, stack=None):
         self.is_raw = isinstance(parent, Exception)
-        self.message = str(parent) if self.is_raw else parent
+        m = str(parent) if self.is_raw else parent
+
+        if stack != None:
+            self.message = "{}\n{}".format("\n".join(stack), m)
+        else:
+            self.message = m
