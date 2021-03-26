@@ -1,7 +1,7 @@
 from functools import reduce
 import base64, time, types, re
 
-from parser import display, parse
+from parser_t import display, parse
 from lark import UnexpectedInput, UnexpectedToken
 from basl_types import Name, Atom, Fn, BaslException, Keyword
 

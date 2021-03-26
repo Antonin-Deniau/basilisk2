@@ -100,7 +100,8 @@ def evl(ast, env):
                         return evl(ast[2][2], new_env)
 
                 if ast[0].name == "raise":
-                    raise BaslException(ast[1], env.stack)
+                    s = "{}:{}:{}".format(env.get("*file*"), ast[0].name, ast[0].line) if isinstance(ast[0], Name) else "LAMBDA"
+                    raise BaslException(ast[1], [*env.stack, s])
 
                 if ast[0].name == "quote":
                     return ast[1]
@@ -148,7 +149,7 @@ def evl(ast, env):
             [f, *args] = eval_ast(ast, env)
 
             if isinstance(f, Fn):
-                s = "{}:{}:{}:{}".format(ast[0].file, ast[0].name, ast[0].line, ast[0].col) if isinstance(ast[0], Name) else "LAMBDA"
+                s = "{}:{}:{}".format(env.get("*file*"), ast[0].name, ast[0].line) if isinstance(ast[0], Name) else "LAMBDA"
                 ast, env = f.ast, Env(f.env, f.params, args, s)
                 continue
 

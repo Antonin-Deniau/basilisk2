@@ -50,6 +50,9 @@ class BaslException(Exception):
         m = str(parent) if self.is_raw else parent
 
         if stack != None:
-            self.message = "{}\n{}".format("\n".join(stack), m)
+            self.message = "StackTrace: \n{}\n\nException: {}".format("\n".join(stack), m)
         else:
             self.message = m
+
+    def __str__(self):
+        return self.message
