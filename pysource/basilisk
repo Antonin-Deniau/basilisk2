@@ -69,6 +69,6 @@ else:
     load_str('(println (str "Mal [" *host-language* "]"))', repl_env)
     while True:
         try:
-            rep(input("basilisk> "), repl_env, "*repl*")
+            rep(input("basilisk> "), repl_env)
         except Exception as e:
             print("Exception: {}".format(e))

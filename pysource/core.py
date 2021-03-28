@@ -1,5 +1,5 @@
 from functools import reduce
-import base64, time, types, re
+import base64, time, types, re, sys
 
 from parser_t import display, parse
 from lark import UnexpectedInput, UnexpectedToken
@@ -82,6 +82,15 @@ def pr_str(*a):
     return " ".join([display(i, True) for i in a])
 
 ns = {
+    # STREAMS FUNCS
+    'output-stream': lambda e: open(e, 'r'),
+    'input-stream': lambda e: open(e, 'w'),
+    '*stdin*': sys.stdin,
+    '*stdout*': sys.stdout,
+    'read-byte': lambda e: e.read(1),
+    'write-byte': lambda e, b: e.write(b),
+    # https://dept-info.labri.fr/~strandh/Teaching/MTP/Common/David-Lamkins/chapter19.html
+    
     '&&': lambda a,b: a and b,
     '||': lambda a,b: a or b,
     'ord': lambda a: ord(a),
@@ -112,6 +121,7 @@ ns = {
     'reset!': lambda a, b: a.reset(b) if isinstance(a, Atom) else nil,
     'swap!': swap,
     'cons': lambda a, b: tuple([a,*b]),
+    'conj': lambda a, b: [*a,b],
     'concat': lambda *a: tuple(reduce(lambda acc, arr: [*acc, *arr], a, ())),
     'vec': lambda a: list(a) if isinstance(a, list) or isinstance(a, tuple) else [a],
     'nth': lambda a, i: a[i],
