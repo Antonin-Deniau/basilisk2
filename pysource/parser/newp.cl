@@ -7,12 +7,20 @@
 
 
 ;; MATCHER
-(defunc number-matcher [char] (between 48 char 57))
-(defunc vector-matcher [char] 1)
+(defunc number-matcher [c] (between 48 c 57))
+(defunc vector-matcher [c] (= "[" c))
+(defunc whitespace-matcher [c] (|| (|| (= " " c) (= "\n" c)) (= "\t" c)))
 
 
 ;; READER
-(defunc number-reader [stream] 1)
+(defunc whitespace-reader [stream] 
+        (if (whitespace-matcher (peek-byte stream))
+          (do
+            (read-byte stream)
+            (whitespace-reader stream))
+          stream))
+
+(defunc number-reader [stream] 2)
 (defunc vector-reader [stream] 1)
 
 ;; READER MACRO
@@ -23,16 +31,17 @@
 
 ;; PARSER FUNCTION
 (defunc read [reader-macro stream]
-        (if (empty? reader-macro)
-          (raise "Unable to find matcher")
-          (let* [macro   (first reader-macro)
-                 matcher (nth macro 0)
-                 reader  (nth macro 1)
-                 char    (peek-byte stream)
-                 is-true (matcher char)]
-            (if is-true
-              (reader stream)
-              (read (rest reader-macro) stream)))))
+        (let* [stream (whitespace-reader stream)]
+          (if (empty? reader-macro)
+            (raise "Unable to find matcher")
+            (let* [macro   (first reader-macro)
+                           matcher (nth macro 0)
+                           reader  (nth macro 1)
+                           char    (peek-byte stream)
+                           is-true (matcher char)]
+              (if is-true
+                (reader stream)
+                (read (rest reader-macro) stream))))))
 
 ;; BASIC PARSER SETUP
 (prn (read reader-macro (string-stream " [ 1 2 3 ] ")))
