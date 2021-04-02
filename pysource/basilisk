@@ -56,6 +56,7 @@ repl_env.set("eval", lambda e: evl(e, repl_env))
 repl_env.set("*ARGV*", tuple(sys.argv[1:]))
 repl_env.set("*host-language*", "basilisk")
 
+load_str("(def! slurp (fn* (f) (read-all (output-stream f))))", repl_env)
 load_str("(def! not (fn* (a) (if a false true)))", repl_env)
 load_str('(def! load-file (fn* (f) (eval (read-string (str "(let* [*file* " (pr-str f) "] (do" (slurp f) "\\n) nil)")))))', repl_env)
 load_str("(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))", repl_env)

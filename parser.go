@@ -1,15 +1,6 @@
 package main
 
 import (
-	"github.com/alecthomas/participle/lexer/stateful"
-	"github.com/alecthomas/participle/lexer"
-	"github.com/alecthomas/participle"
-	"fmt"
-	"os/user"
-	"strings"
-	"log"
-	"github.com/chzyer/readline"
-	"unicode/utf8"
 )
 
 type Program struct {

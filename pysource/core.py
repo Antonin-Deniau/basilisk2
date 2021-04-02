@@ -87,6 +87,7 @@ ns = {
     'input-stream': lambda e: open(e, 'w'),
     '*stdin*': sys.stdin,
     '*stdout*': sys.stdout,
+    'read-all': lambda e: e.read(),
     'read-byte': lambda e: e.read(1),
     'write-byte': lambda e, b: e.write(b),
     # https://dept-info.labri.fr/~strandh/Teaching/MTP/Common/David-Lamkins/chapter19.html
@@ -114,7 +115,7 @@ ns = {
     'prn': prn,
     'println': println,
     'read-string': read_string,
-    'slurp': lambda a: open(a, "r").read(),
+    #'slurp': lambda a: open(a, "r").read(),
     'atom': lambda a: Atom(a),
     'atom?': lambda a: isinstance(a, Atom),
     'deref': lambda a: a.data if isinstance(a, Atom) else nil,
