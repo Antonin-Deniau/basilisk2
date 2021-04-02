@@ -43,7 +43,7 @@
 (defunc read [reader-macro stream]
         (let* [stream (whitespace-ignore stream)]
           (if (empty? reader-macro)
-            (raise "Unable to find matcher: [" (peek-byte stream) "]")
+            (raise (str "Unable to find matcher: [" (peek-byte stream) "]"))
             (let* [macro   (first reader-macro)
                            matcher (nth macro 0)
                            reader  (nth macro 1)
