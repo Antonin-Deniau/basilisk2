@@ -27,8 +27,7 @@
         (let* [stream (whitespace-reader reader-macro stream)] ;; IGNORE WHITESPACE
           (if (= (peek-byte stream) "]") ;; RETURN ON VECTOR END
             ret
-            (let* [ret (conj ret (read reader-macro stream))]
-              (vector-reader-iterate ret reader-macro stream)))))
+            (vector-reader-iterate (conj ret (read reader-macro stream)) reader-macro stream))))
 
 (defunc vector-reader [reader-macro stream] 
         (do
