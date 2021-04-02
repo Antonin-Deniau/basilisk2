@@ -7,19 +7,8 @@
 
 
 ;; MATCHER
-(defunc number-matcher [c]
-        (do
-          (prn "num")
-          (prn c)
-                             (ord-between 48 c 57))
-        )
-
-(defunc vector-matcher [c]
-        (do
-          (prn "vec")
-          (prn c)
-        (= "[" c))
-)
+(defunc number-matcher [c] (ord-between 48 c 57))
+(defunc vector-matcher [c] (= "[" c))
 (defunc whitespace-matcher [c] (|| (|| (= " " c) (= "\n" c)) (= "\t" c)))
 
 
@@ -31,13 +20,14 @@
             (whitespace-ignore stream))
           stream))
 
-(defunc number-reader [reader-macro stream] 2)
+(defunc number-reader [reader-macro stream] (read-byte stream))
 
 (defunc vector-reader-iterate [ret reader-macro stream]
         (let* [stream (whitespace-ignore stream)] ;; IGNORE WHITESPACE
           (if (= (peek-byte stream) "]") ;; RETURN ON VECTOR END
             ret
-            (vector-reader-iterate (conj ret (read reader-macro stream)) reader-macro stream))))
+            (let* [data (read reader-macro stream)]
+                  (vector-reader-iterate (conj ret data) reader-macro stream)))))
 
 (defunc vector-reader [reader-macro stream] 
         (do
