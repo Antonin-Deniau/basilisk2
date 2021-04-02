@@ -102,7 +102,7 @@ def evl(ast, env):
 
                 if ast[0].name == "raise":
                     s = "{}:{}:{}".format(env.get("*file*"), ast[0].name, ast[0].line) if isinstance(ast[0], Name) else "LAMBDA<" + ast[0] + ">"
-                    raise BaslException(ast[1], [*env.stack, s])
+                    raise BaslException(evl(ast[1], env), [*env.stack, s])
 
                 if ast[0].name == "quote":
                     return ast[1]
