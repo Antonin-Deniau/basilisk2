@@ -8,7 +8,7 @@
 
 ;; MATCHER
 (defunc number-matcher [char] (between 48 char 57))
-(defunc vector-matcher [] 1)
+(defunc vector-matcher [char] 1)
 
 
 ;; READER
@@ -25,11 +25,13 @@
 (defunc read [reader-macro stream]
         (if (empty? reader-macro)
           (raise "Unable to find matcher")
-          (let* [macro (first reader-macro)
-                       char (peek-byte stream)
-                       is-true ((nth macro 0) char)]
+          (let* [macro   (first reader-macro)
+                 matcher (nth macro 0)
+                 reader  (nth macro 1)
+                 char    (peek-byte stream)
+                 is-true (matcher char)]
             (if is-true
-              ((nth macro 1) stream)
+              (reader stream)
               (read (rest reader-macro) stream)))))
 
 ;; BASIC PARSER SETUP
