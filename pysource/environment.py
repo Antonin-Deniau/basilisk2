@@ -11,10 +11,10 @@ class Env:
 
         if len(binds) != len(exprs):
             if Name("&") not in binds:
-                raise BaslException("Function should contain {} parametter".format(len(binds)))
+                raise BaslException("Function should contain {} parametter".format(len(binds)), self.stack)
 
             if len(exprs) < len(binds) - 2:
-                raise BaslException("Function should contain at least {} parametter".format(len(binds) - 2))
+                raise BaslException("Function should contain at least {} parametter".format(len(binds) - 2), self.stack)
 
         for i in zip(binds, exprs):
             if Name("&") == i[0]: break
@@ -42,4 +42,4 @@ class Env:
         if env is not None:
             return env.vals[name]
         else:
-            raise BaslException("{} not found".format("'{}'".format(name)), env)
+            raise BaslException("{} not found".format("'{}'".format(name)), self.stack)

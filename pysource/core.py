@@ -1,5 +1,5 @@
 from functools import reduce
-import base64, time, types, re, sys
+import base64, time, types, re, sys, io
 
 from parser_t import display, parse
 from lark import UnexpectedInput, UnexpectedToken
@@ -81,14 +81,22 @@ def basl_map(a, b):
 def pr_str(*a):
     return " ".join([display(i, True) for i in a])
 
+def peek(f):
+    pos = f.tell()
+    line = f.read(1)
+    f.seek(pos)
+    return line
+
 ns = {
     # STREAMS FUNCS
     'output-stream': lambda e: open(e, 'r'),
     'input-stream': lambda e: open(e, 'w'),
+    'string-stream': lambda e: io.StringIO(e),
     '*stdin*': sys.stdin,
     '*stdout*': sys.stdout,
     'read-all': lambda e: e.read(),
     'read-byte': lambda e: e.read(1),
+    'peek-byte': peek,
     'write-byte': lambda e, b: e.write(b),
     # https://dept-info.labri.fr/~strandh/Teaching/MTP/Common/David-Lamkins/chapter19.html
     

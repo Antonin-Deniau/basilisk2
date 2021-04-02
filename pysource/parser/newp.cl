@@ -12,8 +12,8 @@
 
 
 ;; READER
-(defunc number-reader [] 1)
-(defunc vector-reader [] 1)
+(defunc number-reader [stream] 1)
+(defunc vector-reader [stream] 1)
 
 ;; READER MACRO
 (def! reader-macro [
@@ -22,17 +22,15 @@
   ])
 
 ;; PARSER FUNCTION
-(defunc read [& optionals]
-        (let* [stream  (default (nth opt 0 ""))
-               eof-err (default (nth opt 1 true))
-               eof-val (default (nth opt 2 nil))
-               recur   (default (nth opt 3 false))]
-
-          [stream eof-err eof-val recur "lol"]
-          ))
+(defunc read [reader-macro stream]
+        (if (empty? reader-macro)
+          (raise "Unable to find matcher")
+          (let* [macro (first reader-macro)
+                       char (peek-byte stream)
+                       is-true ((nth macro 0) char)]
+            (if is-true
+              ((nth macro 1) stream)
+              (read (rest reader-macro) stream)))))
 
 ;; BASIC PARSER SETUP
-(def! source (slurp "./parser/main.cl"))
-
-;(prn (macroexpand (default 1 "")))
-;(prn (read 1))
+(prn (read reader-macro (string-stream " [ 1 2 3 ] ")))

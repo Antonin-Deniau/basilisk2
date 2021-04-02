@@ -2,6 +2,7 @@ from functools import reduce
 import types, traceback
 
 from basl_types import Fn, Name, BaslException, Keyword, Atom
+from parser_t import display
 from environment import Env
 
 
@@ -100,7 +101,7 @@ def evl(ast, env):
                         return evl(ast[2][2], new_env)
 
                 if ast[0].name == "raise":
-                    s = "{}:{}:{}".format(env.get("*file*"), ast[0].name, ast[0].line) if isinstance(ast[0], Name) else "LAMBDA"
+                    s = "{}:{}:{}".format(env.get("*file*"), ast[0].name, ast[0].line) if isinstance(ast[0], Name) else "LAMBDA<" + ast[0] + ">"
                     raise BaslException(ast[1], [*env.stack, s])
 
                 if ast[0].name == "quote":
@@ -149,7 +150,7 @@ def evl(ast, env):
             [f, *args] = eval_ast(ast, env)
 
             if isinstance(f, Fn):
-                s = "{}:{}:{}".format(env.get("*file*"), ast[0].name, ast[0].line) if isinstance(ast[0], Name) else "LAMBDA"
+                s = "{}:{}:{}".format(env.get("*file*"), ast[0].name, ast[0].line) if isinstance(ast[0], Name) else "LAMBDA<" + display(ast[0], True) + ">"
                 ast, env = f.ast, Env(f.env, f.params, args, s)
                 continue
 
