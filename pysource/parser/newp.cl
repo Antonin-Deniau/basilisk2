@@ -9,7 +9,7 @@
 ;; MATCHER
 (defunc number-matcher [c] (ord-between 48 c 57))
 (defunc vector-matcher [c] (= "[" c))
-(defunc whitespace-matcher [c] (|| (|| (= " " c) (= "\n" c)) (= "\t" c)))
+(defunc whitespace-matcher [c] (reduce || [(= " " c) (= "\n" c) (= "\t" c)]))
 
 
 ;; READER
@@ -61,4 +61,4 @@
             (reader reader-macro stream))))
 
 ;; BASIC PARSER SETUP
-(prn (read reader-macro (string-stream " [ 1 2 3 ] ")))
+(prn (read reader-macro (string-stream " [ -1.5554 .2 5484.263 5 ] ")))

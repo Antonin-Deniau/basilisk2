@@ -78,6 +78,9 @@ def basl_map(a, b):
     s = map(ret_func(a), b)
     return tuple(s)
 
+def basl_reduce(a, b):
+    return reduce(ret_func(a), b)
+
 def pr_str(*a):
     return " ".join([display(i, True) for i in a])
 
@@ -138,6 +141,7 @@ ns = {
     'rest': lambda a: tuple(a[1:]) if a != None and len(a) != 0 else tuple(),
     'apply': appl,
     'map': basl_map,
+    'reduce': basl_reduce,
     'nil?': lambda e: isinstance(e, type(None)),
     'true?': lambda e: e == True,
     'false?': lambda e: e == False,
