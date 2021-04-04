@@ -7,7 +7,7 @@
 
 
 ;; MATCHER
-(defunc number-matcher [c] (ord-between 48 c 57))
+(defunc number-matcher [c] (reduce || (= c ".") (= c "-") (ord-between 48 c 57)))
 (defunc vector-matcher [c] (= "[" c))
 (defunc whitespace-matcher [c] (reduce || [(= " " c) (= "\n" c) (= "\t" c)]))
 
