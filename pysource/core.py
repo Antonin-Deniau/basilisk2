@@ -106,6 +106,7 @@ ns = {
     '&&': lambda a,b: a and b,
     '||': lambda a,b: a or b,
     'ord': lambda a: ord(a),
+    '%': lambda a,b: a % b,
     'chr': lambda a: chr(a),
     'subs': lambda a, b, *c: type(a)(a[b:c[0] if len(c) != 0 else None]),
     '+': lambda a,b: a+b,
