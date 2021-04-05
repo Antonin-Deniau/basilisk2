@@ -1,11 +1,11 @@
 ;; MACRO UTILS
 (defmacro! default (fn* [arg def] `(if (nil? ~arg) ~def ~arg)))
-(defmacro! defunc (fn* [name args func] `(def! ~name (fn* ~args ~func))))
+(defmacro! defun (fn* [name args func] `(def! ~name (fn* ~args ~func))))
 
 ;;UTILS
-(defunc ord-between [low val max] (&& (>= (ord val) low) (<= (ord val) max)))
+(defun ord-between [low val max] (&& (>= (ord val) low) (<= (ord val) max)))
 
-(defunc or-list [& opt] 
+(defun or-list [& opt] 
 	(if (first opt)
 	  true
 	  (if (empty? opt) 
@@ -13,16 +13,16 @@
 	    (apply or-list (rest opt)))))
 
 ;; MATCHER
-(defunc number-matcher [c] (or-list (= c ".") (= c "-") (ord-between 48 c 57)))
-(defunc vector-matcher [c] (= "[" c))
-(defunc list-matcher [c] (= "(" c))
-(defunc map-matcher [c] (= "{" c))
-(defunc keyword-matcher [c] (= ":" c))
-(defunc whitespace-matcher [c] (or-list (= " " c) (= "\n" c) (= "\t" c)))
+(defun number-matcher [c] (or-list (= c ".") (= c "-") (ord-between 48 c 57)))
+(defun vector-matcher [c] (= "[" c))
+(defun list-matcher [c] (= "(" c))
+(defun map-matcher [c] (= "{" c))
+(defun keyword-matcher [c] (= ":" c))
+(defun whitespace-matcher [c] (or-list (= " " c) (= "\n" c) (= "\t" c)))
 
 
 ;; READER
-(defunc whitespace-ignore [stream] 
+(defun whitespace-ignore [stream] 
 	(if (whitespace-matcher (peek-byte stream))
 	  (do
 	    (read-byte stream)
@@ -30,7 +30,7 @@
 	  stream))
 
 
-(defunc number-reader-iterate-decimals [index positive res reader-macro stream]
+(defun number-reader-iterate-decimals [index positive res reader-macro stream]
 	(let* [c (peek-byte stream)]
 	  (if (= c "")
 	    (if positive res (* res -1))
@@ -38,7 +38,7 @@
 	      (number-reader-iterate-decimals (+ index 1) positive (+ res (/ (- (ord (read-byte stream)) 48) (** 10 index))) reader-macro stream)
 	      (if positive res (* res -1))))))
 
-(defunc number-reader-iterate [positive res reader-macro stream]
+(defun number-reader-iterate [positive res reader-macro stream]
 	(let* [c (peek-byte stream)]
 	  (if (= c "")
 	    (if positive res (* res -1))
@@ -50,7 +50,7 @@
 		(number-reader-iterate positive (+ (* res 10) (- (ord (read-byte stream)) 48)) reader-macro stream)
 		(if positive res (* res -1)))))))
 
-(defunc number-reader [reader-macro stream] 
+(defun number-reader [reader-macro stream] 
 	(let* [negative (= (peek-byte stream) "-")]
 	  (if negative
 	    (do
@@ -58,7 +58,7 @@
 	      (number-reader-iterate false 0 reader-macro stream))
 	    (number-reader-iterate true 0 reader-macro stream))))
 
-(defunc vector-reader-iterate [ret reader-macro stream]
+(defun vector-reader-iterate [ret reader-macro stream]
 	(let* [stream (whitespace-ignore stream)]
 	  (if (= (peek-byte stream) "]")
 	    (do
@@ -67,12 +67,12 @@
 	    (let* [data (read reader-macro stream)]
 	      (vector-reader-iterate (conj ret data) reader-macro stream)))))
 
-(defunc vector-reader [reader-macro stream] 
+(defun vector-reader [reader-macro stream] 
 	(do
 	  (read-byte stream)
 	  (vector-reader-iterate [] reader-macro stream)))
 
-(defunc list-reader-iterate [ret reader-macro stream]
+(defun list-reader-iterate [ret reader-macro stream]
 	(let* [stream (whitespace-ignore stream)]
 	  (if (= (peek-byte stream) ")")
 	    (do
@@ -81,7 +81,7 @@
 	    (let* [data (read reader-macro stream)]
 	      (list-reader-iterate (conj ret data) reader-macro stream)))))
 
-(defunc keyword-reader-iterate [res reader-macro stream]
+(defun keyword-reader-iterate [res reader-macro stream]
 	(let* [c (peek-byte stream)]
 	  (if (= c "")
 	    (if (= res "")
@@ -92,17 +92,17 @@
 		(keyword-reader-iterate (str res (read-byte stream)) reader-macro stream))
 	      (keyword res)))))
 
-(defunc keyword-reader [reader-macro stream]
+(defun keyword-reader [reader-macro stream]
 	(do
 	  (read-byte stream)
 	  (keyword-reader-iterate "" reader-macro stream)))
 
-(defunc list-reader [reader-macro stream] 
+(defun list-reader [reader-macro stream] 
 	(do
 	  (read-byte stream)
 	  (list-reader-iterate () reader-macro stream)))
 
-(defunc map-reader-iterate [ret reader-macro stream]
+(defun map-reader-iterate [ret reader-macro stream]
 	(let* [stream (whitespace-ignore stream)]
 	  (if (= (peek-byte stream) "}")
 	    (do
@@ -111,7 +111,7 @@
 	    (let* [data (read reader-macro stream)]
 	      (map-reader-iterate (conj ret data) reader-macro stream)))))
 
-(defunc map-reader [reader-macro stream] 
+(defun map-reader [reader-macro stream] 
 	(do
 	  (read-byte stream)
 	  (let* [items (map-reader-iterate [] reader-macro stream)]
@@ -128,7 +128,7 @@
 		    [vector-matcher  vector-reader]])
 
 ;; PARSER FUNCTION
-(defunc match [reader-macro c]
+(defun match [reader-macro c]
 	(if (empty? reader-macro)
 	  nil
 	  (let* [macro (first reader-macro)
@@ -139,7 +139,7 @@
 	      reader
 	      (match (rest reader-macro) c)))))
 
-(defunc read [reader-macro stream]
+(defun read [reader-macro stream]
 	(let* [stream (whitespace-ignore stream)
 		      byte   (peek-byte stream)
 		      reader (match reader-macro byte)]
