@@ -59,8 +59,8 @@
 	    (number-reader-iterate true 0 reader-macro stream))))
 
 (defunc vector-reader-iterate [ret reader-macro stream]
-	(let* [stream (whitespace-ignore stream)] ;; IGNORE WHITESPACE
-	  (if (= (peek-byte stream) "]") ;; RETURN ON VECTOR END
+	(let* [stream (whitespace-ignore stream)]
+	  (if (= (peek-byte stream) "]")
 	    (do
 	      (read-byte stream)
 	      ret)
@@ -73,8 +73,8 @@
 	  (vector-reader-iterate [] reader-macro stream)))
 
 (defunc list-reader-iterate [ret reader-macro stream]
-	(let* [stream (whitespace-ignore stream)] ;; IGNORE WHITESPACE
-	  (if (= (peek-byte stream) ")") ;; RETURN ON VECTOR END
+	(let* [stream (whitespace-ignore stream)]
+	  (if (= (peek-byte stream) ")")
 	    (do
 	      (read-byte stream)
 	      ret)
@@ -103,8 +103,8 @@
 	  (list-reader-iterate () reader-macro stream)))
 
 (defunc map-reader-iterate [ret reader-macro stream]
-	(let* [stream (whitespace-ignore stream)] ;; IGNORE WHITESPACE
-	  (if (= (peek-byte stream) "}") ;; RETURN ON VECTOR END
+	(let* [stream (whitespace-ignore stream)]
+	  (if (= (peek-byte stream) "}")
 	    (do
 	      (read-byte stream)
 	      ret)
