@@ -9,6 +9,7 @@
 ;; MATCHER
 (defunc number-matcher [c] (reduce || [(= c ".") (= c "-") (ord-between 48 c 57)]))
 (defunc vector-matcher [c] (= "[" c))
+(defunc list-matcher [c] (= "(" c))
 (defunc whitespace-matcher [c] (reduce || [(= " " c) (= "\n" c) (= "\t" c)]))
 
 
@@ -52,7 +53,9 @@
 (defunc vector-reader-iterate [ret reader-macro stream]
         (let* [stream (whitespace-ignore stream)] ;; IGNORE WHITESPACE
           (if (= (peek-byte stream) "]") ;; RETURN ON VECTOR END
-            ret
+            (do
+              (read-byte stream)
+              ret)
             (let* [data (read reader-macro stream)]
                   (vector-reader-iterate (conj ret data) reader-macro stream)))))
 
@@ -61,9 +64,24 @@
           (read-byte stream)
           (vector-reader-iterate [] reader-macro stream)))
 
+(defunc list-reader-iterate [ret reader-macro stream]
+        (let* [stream (whitespace-ignore stream)] ;; IGNORE WHITESPACE
+          (if (= (peek-byte stream) ")") ;; RETURN ON VECTOR END
+            (do
+              (read-byte stream)
+              ret)
+            (let* [data (read reader-macro stream)]
+                  (list-reader-iterate (conj ret data) reader-macro stream)))))
+
+(defunc list-reader [reader-macro stream] 
+        (do
+          (read-byte stream)
+          (list-reader-iterate () reader-macro stream)))
+
 
 ;; READER MACRO
 (def! reader-macro [
+    [list-matcher   list-reader]
     [number-matcher number-reader]
     [vector-matcher vector-reader]])
 
@@ -88,4 +106,4 @@
             (reader reader-macro stream))))
 
 ;; BASIC PARSER SETUP
-(prn (read reader-macro (string-stream " [-1.5554 .2 5484.263 5 -1] ")))
+(prn (read reader-macro (string-stream "(1 [-1.5554 .2 5484.263 5 -1] 5)")))
