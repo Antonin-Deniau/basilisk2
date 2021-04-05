@@ -7,7 +7,7 @@
 
 
 ;; MATCHER
-(defunc number-matcher [c] (reduce || (= c ".") (= c "-") (ord-between 48 c 57)))
+(defunc number-matcher [c] (reduce || [(= c ".") (= c "-") (ord-between 48 c 57)]))
 (defunc vector-matcher [c] (= "[" c))
 (defunc whitespace-matcher [c] (reduce || [(= " " c) (= "\n" c) (= "\t" c)]))
 
@@ -20,7 +20,34 @@
             (whitespace-ignore stream))
           stream))
 
-(defunc number-reader [reader-macro stream] (read-byte stream))
+
+(defunc number-reader-iterate-decimals [index positive res reader-macro stream]
+        (let* [c (peek-byte stream)]
+          (if (= c "")
+            (if positive res (* res -1))
+            (if (ord-between 48 c 57)
+              (number-reader-iterate-decimals (+ index 1) positive (+ res (/ (- (ord (read-byte stream)) 48) (** 10 index))) reader-macro stream)
+              (if positive res (* res -1))))))
+
+(defunc number-reader-iterate [positive res reader-macro stream]
+        (let* [c (peek-byte stream)]
+          (if (= c "")
+            (if positive res (* res -1))
+            (if (= c ".")
+              (do
+                (read-byte stream)
+                (number-reader-iterate-decimals 1 positive res reader-macro stream))
+              (if (ord-between 48 c 57)
+                (number-reader-iterate positive (+ (* res 10) (- (ord (read-byte stream)) 48)) reader-macro stream)
+                (if positive res (* res -1)))))))
+
+(defunc number-reader [reader-macro stream] 
+        (let* [negative (= (peek-byte stream) "-")]
+          (if negative
+            (do
+              (read-byte stream)
+              (number-reader-iterate false 0 reader-macro stream))
+            (number-reader-iterate true 0 reader-macro stream))))
 
 (defunc vector-reader-iterate [ret reader-macro stream]
         (let* [stream (whitespace-ignore stream)] ;; IGNORE WHITESPACE
@@ -61,4 +88,4 @@
             (reader reader-macro stream))))
 
 ;; BASIC PARSER SETUP
-(prn (read reader-macro (string-stream " [ -1.5554 .2 5484.263 5 ] ")))
+(prn (read reader-macro (string-stream " [-1.5554 .2 5484.263 5 -1] ")))
