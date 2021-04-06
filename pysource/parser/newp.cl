@@ -19,6 +19,7 @@
 (defun map-matcher [c] (= "{" c))
 (defun keyword-matcher [c] (= ":" c))
 (defun whitespace-matcher [c] (or-list (= " " c) (= "\n" c) (= "\t" c)))
+(defun symbol-matcher [c] (! (whitespace-matcher c)))
 
 
 ;; READER
@@ -82,20 +83,39 @@
 	      (list-reader-iterate (conj ret data) reader-macro stream)))))
 
 (defun keyword-reader-iterate [res reader-macro stream]
-	(let* [c (peek-byte stream)]
-	  (if (= c "")
-	    (if (= res "")
-	      (raise "Unable to get keyword.")
-	      (keyword res))
-	    (if (or-list (ord-between 65 c 90) (= c "-") (= c "_") (ord-between  96 c 122))
-	      (do
-		(keyword-reader-iterate (str res (read-byte stream)) reader-macro stream))
-	      (keyword res)))))
+  (let* [c (peek-byte stream)]
+    (if (= c "")
+      (if (= res "")
+        (raise "Unable to get keyword.")
+        (keyword res))
+      (if (or-list (ord-between 65 c 90) (= c "-") (= c "_") (ord-between  96 c 122))
+        (keyword-reader-iterate (str res (read-byte stream)) reader-macro stream)
+        (keyword res)))))
 
 (defun keyword-reader [reader-macro stream]
 	(do
 	  (read-byte stream)
 	  (keyword-reader-iterate "" reader-macro stream)))
+
+(defun symbol-reader-iterate [res reader-macro stream]
+  (let* [c (peek-byte stream)]
+    (if (= c "")
+      (if (= res "")
+        (raise "Unable to get symbol.")
+        res)
+      (if (or-list (= " " c) (= "\n" c) (= "\t" c))
+        res
+        (symbol-reader-iterate (str res (read-byte stream)) reader-macro stream)))))
+
+(defun filter-special-symbols [s]
+  (cond
+    (= s "true") true
+    (= s "false") false
+    (= s "nil") nil
+    "else" (symbol s)))
+
+(defun symbol-reader [reader-macro stream]
+  (filter-special-symbols (symbol-reader-iterate "" reader-macro stream)))
 
 (defun list-reader [reader-macro stream] 
 	(do
@@ -122,10 +142,11 @@
 
 ;; READER MACRO
 (def! reader-macro [[keyword-matcher keyword-reader]
-		    [map-matcher     map-reader]
-		    [list-matcher    list-reader]
-		    [number-matcher  number-reader]
-		    [vector-matcher  vector-reader]])
+                    [map-matcher    map-reader]
+                    [list-matcher   list-reader]
+                    [number-matcher number-reader]
+                    [vector-matcher vector-reader]
+                    [symbol-matcher symbol-reader]])
 
 ;; PARSER FUNCTION
 (defun match [reader-macro c]
@@ -148,4 +169,4 @@
 	    (reader reader-macro stream))))
 
 ;; BASIC PARSER SETUP
-(prn (read reader-macro (string-stream "(1 [-1.5554 .2 5484.263 { :a 5 :s-_ 5 :s-_a 8} 5 -1] 5)")))
+(prn (read reader-macro (string-stream "(1 [-1.5554 name nil true false .2 5484.263 { :a 5 :s-_ 5 :s-_a 8} 5 -1] 5)")))
