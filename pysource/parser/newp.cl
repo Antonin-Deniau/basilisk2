@@ -18,7 +18,7 @@
 (defun list-matcher [c] (= "(" c))
 (defun map-matcher [c] (= "{" c))
 (defun keyword-matcher [c] (= ":" c))
-(defun whitespace-matcher [c] (or-list (= " " c) (= "\n" c) (= "\t" c)))
+(defun whitespace-matcher [c] (or-list (= " " c) (= "\n" c) (= 9 (ord c))))
 (defun symbol-matcher [c] (! (whitespace-matcher c)))
 
 
@@ -103,7 +103,7 @@
       (if (= res "")
         (raise "Unable to get symbol.")
         res)
-      (if (or-list (= " " c) (= "\n" c) (= "\t" c))
+      (if (or-list (= " " c) (= "\n" c) (= 9 (ord c)))
         res
         (symbol-reader-iterate (str res (read-byte stream)) reader-macro stream)))))
 
