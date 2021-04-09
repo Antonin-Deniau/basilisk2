@@ -1,5 +1,4 @@
 ;; MACRO UTILS
-(defmacro! default (fn* [arg def] `(if (nil? ~arg) ~def ~arg)))
 (defmacro! defun (fn* [name args func] `(def! ~name (fn* ~args ~func))))
 
 ;;UTILS
@@ -18,6 +17,7 @@
 (defun list-matcher [c] (= "(" c))
 (defun map-matcher [c] (= "{" c))
 (defun keyword-matcher [c] (= ":" c))
+(defun string-matcher [c] (= ":" c))
 (defun whitespace-matcher [c] (or-list (= " " c) (= "\n" c) (= 9 (ord c))))
 (defun symbol-matcher [c] (! (whitespace-matcher c)))
 
@@ -140,12 +140,30 @@
         (raise "Items in hash-map must be in pair")))))
 
 
+(defun string-reader-iterate [res esc reader-macro stream]
+  (let* [c (read-byte stream)]
+    (cond
+      (= c "") (raise "Unexpected end of input")
+      (= c "\"") (if esc 
+                    (string-reader-iterate (str res c) false reader-macro)
+                    res)
+      (= c "\\") (if esc
+                    (string-reader-iterate (str res c) false reader-macro stream)
+                    (string-reader-iterate res true reader-macro stream))
+      "else" (string-reader-iterate (str res c) false reader-macro stream))))
+
+(defun string-reader [reader-macro stream]
+  (do 
+    (read-byte stream)
+    (string-reader-iterate "" false reader-macro stream)))
+
 ;; READER MACRO
 (def! reader-macro [[keyword-matcher keyword-reader]
                     [map-matcher    map-reader]
                     [list-matcher   list-reader]
                     [number-matcher number-reader]
                     [vector-matcher vector-reader]
+                    [string-matcher string-reader]
                     [symbol-matcher symbol-reader]])
 
 ;; PARSER FUNCTION
@@ -165,7 +183,7 @@
          byte   (peek-byte stream)
          reader (match reader-macro byte)]
     (if (nil? reader)
-      (raise (str "Unable to find matcher: [" byte "]"))
+      (raise (str "Unable to find matcher for byte: `" byte "`"))
       (reader reader-macro stream))))
 
 ;; BASIC PARSER SETUP
