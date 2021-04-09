@@ -144,8 +144,11 @@
   (let* [c (read-byte stream)]
     (cond
       (= c "") (raise "Unexpected end of input")
+      (= c "n") (if esc
+                    (string-reader-iterate (str res "\n") false reader-macro stream)
+                    (string-reader-iterate (str res c) false reader-macro stream))
       (= c "\"") (if esc 
-                    (string-reader-iterate (str res c) false reader-macro)
+                    (string-reader-iterate (str res c) false reader-macro stream)
                     res)
       (= c "\\") (if esc
                     (string-reader-iterate (str res c) false reader-macro stream)
@@ -187,4 +190,4 @@
       (reader reader-macro stream))))
 
 ;; BASIC PARSER SETUP
-(prn (read reader-macro (string-stream "(1 [-1.5554 name nil true false .2 5484.263 { :a 5 :s-_ 5 :s-_a 8} 5 -1] 5)")))
+(prn (read reader-macro (string-stream "(1 [-1.5554 name \"\\\"loli\\nl\\rol\" nil true false .2 5484.263 { :a 5 :s-_ 5 :s-_a 8} 5 -1] 5)")))
