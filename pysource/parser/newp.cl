@@ -18,18 +18,29 @@
 (defun map-matcher [c] (= "{" c))
 (defun keyword-matcher [c] (= ":" c))
 (defun string-matcher [c] (= "\"" c))
+(defun quote-matcher [c] (= "'" c))
+(defun deref-matcher [c] (= "@" c))
+(defun unquote-matcher [c] (= "~" c))
+(defun quasiquote-matcher [c] (= "`" c))
+(defun metadata-matcher [c] (= "^" c))
 (defun whitespace-matcher [c] (or-list (= " " c) (= "\n" c) (= 9 (ord c))))
 (defun symbol-matcher [c] (! (whitespace-matcher c)))
 
 
 ;; READER
+(defun ignore-until-newline [stream]
+  (if (= (read-byte stream) "\n")
+    stream
+    (ignore-until-newline stream)))
+
 (defun whitespace-ignore [stream] 
   (if (whitespace-matcher (peek-byte stream))
     (do
       (read-byte stream)
       (whitespace-ignore stream))
-    stream))
-
+    (if (= (peek-byte stream) ";")
+      (whitespace-ignore (ignore-until-newline stream))
+      stream)))
 
 (defun number-reader-iterate-decimals [index positive res reader-macro stream]
   (let* [c (peek-byte stream)]
@@ -51,6 +62,7 @@
           (number-reader-iterate positive (+ (* res 10) (- (ord (read-byte stream)) 48)) reader-macro stream)
           (if positive res (* res -1)))))))
 
+
 (defun number-reader [reader-macro stream] 
   (let* [negative (= (peek-byte stream) "-")]
     (if negative
@@ -58,6 +70,35 @@
         (read-byte stream)
         (number-reader-iterate false 0 reader-macro stream))
       (number-reader-iterate true 0 reader-macro stream))))
+
+(defun deref-reader [reader-macro stream]
+  (do
+    (read-byte stream)
+    (list 'deref (read reader-macro stream))))
+
+(defun quote-reader [reader-macro stream]
+  (do
+    (read-byte stream)
+    (list 'quote (read reader-macro stream))))
+
+(defun metadata-reader [reader-macro stream]
+  (do
+    (read-byte stream)
+    (list 'with-meta (read reader-macro stream) (read reader-macro stream))))
+
+(defun unquote-reader [reader-macro stream]
+  (do
+    (read-byte stream)
+    (if (= (peek-byte stream) "@")
+      (do
+        (read-byte stream)
+        (list 'splice-unquote (read reader-macro stream)))
+      (list 'unquote (read reader-macro stream)))))
+
+(defun quasiquote-reader [reader-macro stream]
+  (do
+    (read-byte stream)
+    (list 'quasiquote (read reader-macro stream))))
 
 (defun vector-reader-iterate [ret reader-macro stream]
   (let* [stream (whitespace-ignore stream)]
@@ -161,13 +202,19 @@
     (string-reader-iterate "" false reader-macro stream)))
 
 ;; READER MACRO
-(def! reader-macro [[keyword-matcher keyword-reader]
-                    [map-matcher    map-reader]
-                    [list-matcher   list-reader]
-                    [number-matcher number-reader]
-                    [vector-matcher vector-reader]
-                    [string-matcher string-reader]
-                    [symbol-matcher symbol-reader]])
+(def! reader-macro [[keyword-matcher    keyword-reader]
+                    [map-matcher        map-reader]
+                    [list-matcher       list-reader]
+                    [number-matcher     number-reader]
+                    [vector-matcher     vector-reader]
+                    [string-matcher     string-reader]
+                    [quote-matcher      quote-reader]
+                    [unquote-matcher    unquote-matcher]
+                    [quasiquote-matcher quasiquote-matcher]
+                    [quote-matcher      quote-reader]
+                    [metadata-matcher   metadata-reader]
+                    [deref-matcher      reref-reader]
+                    [symbol-matcher     symbol-reader]])
 
 ;; PARSER FUNCTION
 (defun match [reader-macro c]
@@ -190,4 +237,4 @@
       (reader reader-macro stream))))
 
 ;; BASIC PARSER SETUP
-(prn (read reader-macro (string-stream "(1 [-1.5554 name \"\\\"loli\\nl\\rol\" nil true false .2 5484.263 { :a 5 :s-_ 5 :s-_a 8} 5 -1] 5)")))
+(prn (read reader-macro (string-stream "(1 [-1.5554 name \"\\\"loli\\nl\\rol\" nil true 'false '(1 2) .2 5484.263 { :a 5 :s-_ 5 :s-_a 8} 5 -1] 5)")))
