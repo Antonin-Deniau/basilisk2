@@ -213,7 +213,7 @@
                     [quasiquote-matcher quasiquote-matcher]
                     [quote-matcher      quote-reader]
                     [metadata-matcher   metadata-reader]
-                    [deref-matcher      reref-reader]
+                    [deref-matcher      deref-reader]
                     [symbol-matcher     symbol-reader]])
 
 ;; PARSER FUNCTION
