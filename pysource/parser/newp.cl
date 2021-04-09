@@ -17,7 +17,7 @@
 (defun list-matcher [c] (= "(" c))
 (defun map-matcher [c] (= "{" c))
 (defun keyword-matcher [c] (= ":" c))
-(defun string-matcher [c] (= ":" c))
+(defun string-matcher [c] (= "\"" c))
 (defun whitespace-matcher [c] (or-list (= " " c) (= "\n" c) (= 9 (ord c))))
 (defun symbol-matcher [c] (! (whitespace-matcher c)))
 
