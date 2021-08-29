@@ -18,7 +18,7 @@
 (defun map-matcher [c] (= "{" c))
 (defun keyword-matcher [c] (= ":" c))
 (defun string-matcher [c] (= "\"" c))
-(defun quote-matcher [c] (= "'" c))
+(defun quote-matcher))
 (defun deref-matcher [c] (= "@" c))
 (defun unquote-matcher [c] (= "~" c))
 (defun quasiquote-matcher [c] (= "`" c))
@@ -237,4 +237,6 @@
       (reader reader-macro stream))))
 
 ;; BASIC PARSER SETUP
-(prn (read reader-macro (string-stream "(1 [-1.5554 name \"\\\"loli\\nl\\rol\" nil true 'false '(1 2) .2 5484.263 { :a 5 :s-_ 5 :s-_a 8} 5 -1] 5)")))
+;(prn (read reader-macro (string-stream "(1 [-1.5554 name \"\\\"loli\\nl\\rol\" nil true 'false '(1 2) .2 5484.263 { :a 5 :s-_ 5 :s-_a 8} 5 -1] 5)")))
+(def! file (output-stream "./parser/newp.cl"))
+(prn (read reader-macro file))

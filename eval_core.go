@@ -1,4 +1,6 @@
-from functools import reduce
+package main
+
+/*from functools import reduce
 import types, traceback
 
 from basl_types import Fn, Name, BaslException, Keyword, Atom
@@ -158,3 +160,4 @@ def eval_ast(ast, env):
 
     return ast
 
+*/

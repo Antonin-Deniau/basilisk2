@@ -164,8 +164,8 @@ search_name(data)
 search_symbol(data)
 
 
-print(len(name_dict))
-print(len(symbol_dict))
+print(name_dict)
+print(symbol_dict)
 
 
 

@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"fmt"
 )
@@ -61,3 +62,4 @@ func (e Env) Get(name) (BType, error) {
 		return nil, BException(fmt.Sprintf("'%s' not found", name))
 	}
 }
+*/

@@ -1,4 +1,6 @@
-def with_meta(e, meta):
+package main
+
+/*def with_meta(e, meta):
     return e
 
 def readline(e):
@@ -134,3 +136,4 @@ ns = {
     'with-meta': with_meta,
     'seq': lambda e: tuple(e) if e != None and len(e) != 0 else None,
 }
+*/
