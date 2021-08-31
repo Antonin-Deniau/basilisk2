@@ -8,12 +8,16 @@ import (
 
 func DisplayBList(list *BList, sb *strings.Builder, readably bool) error {
 	sb.WriteRune('(')
-	for _, expr := range list.Value {
+	end := len(list.Value) - 1
+	for i, expr := range list.Value {
 		err := Display(expr, sb, readably)
 		if err != nil {
 			return err
 		}
-		sb.WriteRune(' ')
+
+		if i != end {
+			sb.WriteRune(' ')
+		}
 	}
 	sb.WriteRune(')')
 
