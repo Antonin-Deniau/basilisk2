@@ -32,8 +32,7 @@ func DisplayBName(string *BName, sb *strings.Builder, readably bool) error {
 func DisplayBString(string *BString, sb *strings.Builder, readably bool) error {
 	sb.WriteRune('"')
 	if readably == true {
-		sb.WriteString(PrStr(string.Value, readably))
-
+		PrStr(sb, string.Value, readably)
 	} else {
 		sb.WriteString(string.Value)
 	}
@@ -206,54 +205,48 @@ func Display(x *BType, readably bool) (string, error) {
 }
 */
 
-func Unescape(s string) string {
+func Unescape(sb *strings.Builder, s string) {
 	// strconv.Unquote
-	var res strings.Builder
 	esc := false
 
 	for _, i := range s {
 		if i == '\\' && esc == false {
 			esc = true
 		} else if i == '\\' && esc == true {
-			res.WriteRune('\\')
+			sb.WriteRune('\\')
 			esc = false
 		} else if i == 'n' && esc == true {
-			res.WriteRune('\n')
+			sb.WriteRune('\n')
 			esc = false
 		} else if i == '"' && esc == true {
-			res.WriteRune('"')
+			sb.WriteRune('"')
 			esc = false
 		} else {
-			res.WriteRune(i)
+			sb.WriteRune(i)
 			esc = false
 		}
 	}
-
-	return res.String()
 }
 
-func Escape(s string) string {
-	var res strings.Builder
+func Escape(sb *strings.Builder, s string) {
 	for _, i := range s {
 		if i == '\\' {
-			res.WriteString("\\\\")
+			sb.WriteString("\\\\")
 		} else if i == '"' {
-			res.WriteString("\\\"")
+			sb.WriteString("\\\"")
 		} else if i == '\n' {
-			res.WriteString("\\n")
+			sb.WriteString("\\n")
 		} else {
-			res.WriteRune(i)
+			sb.WriteRune(i)
 		}
 	}
-
-	return res.String()
 }
 
-func PrStr(x string, readably bool) string {
+func PrStr(sb *strings.Builder, x string, readably bool) {
      if readably {
-	     return Escape(x)
+	     Escape(sb, x)
      } else {
-	     return x
+	     sb.WriteString(x)
      }
 }
 

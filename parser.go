@@ -24,7 +24,6 @@ type ParserContext struct {
 	Ast *Node
 }
 
-
 var string_regex = regexp.MustCompile(`^"((:?\\.|[^"\\])*)"`)
 var name_regex = regexp.MustCompile("^([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
 var open_parent_regex = regexp.MustCompile(`^\(`)

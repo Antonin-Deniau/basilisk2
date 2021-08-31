@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 type Node struct {
@@ -65,7 +66,10 @@ func ProcessList(node *Node) (BType, error) {
 }
 
 func ProcessString(node *Node) (BType, error) {
-	string := BString{Value: Unescape(node.Value)}
+	var sb strings.Builder
+	Unescape(&sb, node.Value)
+
+	string := BString{Value: sb.String()}
 
 	return string, nil
 }
@@ -89,9 +93,8 @@ func ProcessNode(node *Node) (BType, error) {
 	case "Quote":
 		return ProcessQuote(node)
 	case "Expr":
-		for _, expr := range node.Childs {
-			return ProcessNode(expr)
-		}
+		return ProcessNode(node.Childs[0])
+		//for _, expr := range node.Childs {
 	case "Nil":
 		return ProcessNil(node)
 	case "Name":
