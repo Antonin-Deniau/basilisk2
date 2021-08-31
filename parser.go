@@ -3,43 +3,70 @@ package main
 import (
 	"strings"
 	"errors"
-	"io"
+	"regexp"
 	"fmt"
 )
 
 type Rule struct {
 	Name string
-	Char rune
+	Regex *regexp.Regexp
 	Action Action
-	WildCard bool
 }
 
-type Action func(ctx *ParserContext, char rune) error
+type Action func(ctx *ParserContext, matcher_name string, captured string) error
 
 type Parser map[string][]Rule
 
 type ParserContext struct {
 	Stack []string
+	Text string
 	Parser Parser
-	Stream *strings.Reader
-	Next bool
-	Captured []*strings.Builder
 	Processed bool
+	Index int64
 	Ast *Node
 }
 
 
-func Push(next_expr string) Action {
-	return func(ctx *ParserContext, char rune) error {
-		var curr_capture strings.Builder 
-		ctx.Captured = append(ctx.Captured, &curr_capture)
+var string_regex = regexp.MustCompile(`^"((:?\\.|[^"\\])*)"`)
+var name_regex = regexp.MustCompile("^([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
+var open_parent_regex = regexp.MustCompile(`^\(`)
+var close_parent_regex = regexp.MustCompile(`^\)`)
+var keyword_regex = regexp.MustCompile("^:([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
+var comment_regex = regexp.MustCompile(`^;[^\n]*\n`)
+var whitespace_regex = regexp.MustCompile(`^[\s,]+`)
 
+
+var rules = Parser{
+	"Expr": {
+		Rule{"OpenParent", open_parent_regex, Push("List")},
+
+		Rule{"String", string_regex, Read()},
+		Rule{"Keyword", keyword_regex, Read()},
+		Rule{"Name", name_regex, Read()},
+
+		Rule{"Comment", comment_regex, Read()},
+		Rule{"Whitespace", whitespace_regex, Read()},
+	},
+	"List": {
+		Rule{"CloseParent", close_parent_regex, Pop()},
+		Rule{"OpenParent", open_parent_regex, Push("List")},
+
+		Rule{"String", string_regex, Read()},
+		Rule{"Name", name_regex, Read()},
+		Rule{"Keyword", keyword_regex, Read()},
+
+		Rule{"Comment", comment_regex, Read()},
+		Rule{"Whitespace", whitespace_regex, Read()},
+	},
+}
+
+
+
+func Push(next_expr string) Action {
+	return func(ctx *ParserContext, matcher_name string, captured string) error {
 		//fmt.Printf("PUSH: %s\n", next_expr)
 
 		ctx.Stack = append(ctx.Stack, next_expr)
-
-		ctx.Next = true
-		ctx.Processed = true
 
 		child := &Node{
 			Type: next_expr,
@@ -55,139 +82,87 @@ func Push(next_expr string) Action {
 }
 
 func Read() Action {
-	return func(ctx *ParserContext, char rune) error {
-		curr_capture := ctx.Captured[len(ctx.Captured)-1]
+	return func(ctx *ParserContext, matcher_name string, captured string) error {
+		//fmt.Printf("READ: [%s]\n", captured)
 
-		//fmt.Printf("READ: [%s]\n", string(char))
-		curr_capture.WriteRune(char)
-		ctx.Processed = true
+		child := &Node{
+			Type: matcher_name,
+			Parent: ctx.Ast,
+			Value: captured,
+		}
 
-		return nil
-	}
-}
+		ctx.Ast.Childs = append(ctx.Ast.Childs, child)
 
-func Goto(next_expr string) Action {
-	return func(ctx *ParserContext, char rune) error {
-		//fmt.Printf("GOTO: %s\n", next_expr)
-
-		ctx.Next = true
-		ctx.Processed = true
-
-		ctx.Stack = append(ctx.Stack, next_expr)
-
-		return nil
-	}
-}
-
-func Return() Action {
-	return func(ctx *ParserContext, char rune) error {
-		curr_capture := ctx.Captured[len(ctx.Captured)-1]
-
-		curr_capture.WriteRune(char)
-
-		//fmt.Printf("RETURN: [%s]\n", curr_capture.String())
-
-		ctx.Next = true
-		ctx.Stack = ctx.Stack[:len(ctx.Stack)-1]
-
-		ctx.Processed = true
 		return nil
 	}
 }
 
 func Pop() Action {
-	return func(ctx *ParserContext, char rune) error {
-		curr_capture := ctx.Captured[len(ctx.Captured)-1]
+	return func(ctx *ParserContext, matcher_name string, captured string) error {
+		//fmt.Printf("POP [%s]\n", matcher_name)
 
-		//fmt.Printf("[%s => %s]\n", ctx.Stack[len(ctx.Stack)-1], curr_capture.String())
-
-		ctx.Next = true
 		ctx.Stack = ctx.Stack[:len(ctx.Stack)-1]
-		ctx.Captured = ctx.Captured[:len(ctx.Captured)-1]
 
-		ctx.Processed = true
-
-		ctx.Ast.Value = curr_capture.String()
 		ctx.Ast = ctx.Ast.Parent
 
 		return nil
 	}
 }
 
-func Ignore(reg string) Action {
-	return func(ctx *ParserContext, char rune) error {
-		if (!strings.ContainsRune(reg, char)) {
-			ctx.Stream.UnreadRune()
-			return nil
-		}
-
-		ctx.Processed = true
-
-		if ctx.Stream.Len() == 0 {
-			return errors.New("EOF Reached while trying to parse whitespace\n")
-		}
-
-		for {
-			bchar, _, err := ctx.Stream.ReadRune()
-			if err == io.EOF {
-				return nil
-			}
-
-			if (!strings.ContainsRune(reg, bchar)) {
-				ctx.Stream.UnreadRune()
-				return nil
-			}
-		}
-	}
-}
-
-func InitParserContext(parser Parser, root string, stream *strings.Reader) *ParserContext {
+func InitParserContext(str string) *ParserContext {
 	ctx := &ParserContext{
 		Stack: make([]string, 0),
-		Parser: parser,
-		Stream: stream,
+		Parser: rules,
 		Processed: true,
-		Next: false,
-		Ast: &Node{Type: "expr", Childs: make([]*Node, 0)},
-		Captured: make([]*strings.Builder, 0),
+		Index: 0,
+		Text: str,
+		Ast: &Node{Type: "Expr", Childs: make([]*Node, 0)},
 	}
 
-	ctx.Stack = append(ctx.Stack, root)
-	ctx.Captured = append(ctx.Captured, &strings.Builder{})
+	ctx.Stack = append(ctx.Stack, "Expr")
 	return ctx
 }
 
 func ParseExpr(ctx *ParserContext) error {
 	ctx.Processed = true
 
-	for ctx.Processed == true {
-		ctx.Next = false
+	for {
 		curr_expr := ctx.Parser[ctx.Stack[len(ctx.Stack)-1]]
 		ctx.Processed = false
 
-		curr_rune, _, err := ctx.Stream.ReadRune()
-		if err == io.EOF {
-			return errors.New(fmt.Sprintf("EOF While parsing\n"))
-		}
-
 		for _, entry := range curr_expr {
-			if (entry.WildCard || entry.Char == curr_rune) {
-				//fmt.Printf("Matched [%s.%s] on rune [%s]\n", ctx.Stack[len(ctx.Stack)-1], entry.Name, string(curr_rune))
+	    	found := entry.Regex.FindStringSubmatch(ctx.Text[ctx.Index:])
 
-				err := entry.Action(ctx, curr_rune)
-				if err != nil {
-					return err
+	    	//fmt.Printf("Checking [%s.%s] => %s\n", ctx.Stack[len(ctx.Stack)-1], entry.Name, ctx.Text[ctx.Index:])
+
+			if found != nil {
+				ctx.Index += int64(len(found[0]))
+
+				if len(found) != 1 {
+					//fmt.Printf("Matched [%s.%s] [%s]\n", ctx.Stack[len(ctx.Stack)-1], entry.Name, found[1])
+
+					err_action := entry.Action(ctx, entry.Name, found[1])
+					if err_action != nil {
+						return err_action
+					}
+				} else {
+					//fmt.Printf("Matched [%s.%s] _\n", ctx.Stack[len(ctx.Stack)-1], entry.Name)
+					err_action := entry.Action(ctx, entry.Name, "")
+					if err_action != nil {
+						return err_action
+					}
 				}
 
-				if ctx.Next == true {
-					break
-				}
+				if int64(len(ctx.Text)) == ctx.Index {
+					if len(ctx.Stack) != 1 {
+						return errors.New("Unexpected EOF")
+					}
 
-				if ctx.Stream.Len() == 0 {
-					// METTRE LES ERREUR EOF ICI
 					ctx.Ast = FindRootNode(ctx.Ast)
 					return nil
 				}
+
+				break
 			}
 		}
 	}
@@ -195,66 +170,43 @@ func ParseExpr(ctx *ParserContext) error {
 	return errors.New(fmt.Sprintf("Error parsing all this mess\n"))
 }
 
-func GetParser() {
-	parser := Parser{
-		"expr": {
-			Rule{"OpenParent", '(', Push("list"), false},
-			Rule{"OpenQuote", '"', Push("string"), false},
-
-			Rule{"comment", ';', Push("comment"), false},
-			Rule{"Whitespace", '_', Ignore(" \n\t,"), true},
-		},
-		"list": {
-			Rule{"CloseParent", ')', Pop(), false},
-			Rule{"OpenParent", '(', Push("list"), false},
-			Rule{"OpenQuote", '"', Push("string"), false},
-
-			Rule{"comment", ';', Push("comment"), false},
-			Rule{"Whitespace", '_', Ignore(" \n\t,"), true},
-		},
-		"comment": {
-			Rule{"NewLine", '\n', Pop(), false},
-			Rule{"Char", '_', Read(), true},
-		},
-		"string": {
-			Rule{"Escape", '\\', Goto("escaped"), false},
-			Rule{"CloseQuote", '"', Pop(), false},
-			Rule{"Char", '_', Read(), true},
-		},
-		"escaped": {
-			Rule{"Char", '_', Return(), true},
-		},
-	}
-
-	data := strings.NewReader(`("lol", ("qsdfqsdfqsd\\  \ \" \\\\" "qsdf" ) "lol") ; this is a comment`)
-
-	ctx := InitParserContext(parser, "expr", data)
+func TestParser(str_input string) error {
+	ctx := InitParserContext(fmt.Sprintf("%s\n", str_input))
 
 	parse_err := ParseExpr(ctx)
 	if parse_err != nil {
-		fmt.Print(parse_err)
-		return
+		return parse_err
 	}
 
-	//fmt.Print("AST:\n")
-	//DisplayNode(ctx.Ast, 0)
+	DisplayNode(ctx.Ast, 0)
+
+	return nil
+}
+
+
+func Parse(str_input string) (*BType, error) {
+	ctx := InitParserContext(fmt.Sprintf("%s\n", str_input))
+
+	parse_err := ParseExpr(ctx)
+	if parse_err != nil {
+		return nil, parse_err
+	}
 
 	bexpr, bexpr_err := ProcessNode(ctx.Ast)
 	if bexpr_err != nil {
-		fmt.Print(bexpr_err)
-		return
+		return nil, bexpr_err
 	}
 
+	return &bexpr, nil
+	/*
 	var sb strings.Builder
 	disp_err := Display(&bexpr, &sb, true)
 	if disp_err != nil {
 		fmt.Printf("ERROR %s\n", bexpr_err)
 		return
 	}
-
 	fmt.Printf("BType expression: %+v\n", sb.String())
-
-	
+	*/	
 }
 
 func Unescape(s string) string {
@@ -312,137 +264,6 @@ func betterFormat(num float64) string {
     s := fmt.Sprintf("%.6f", num)
     return strings.TrimRight(strings.TrimRight(s, "0"), ".")
 }
-
-/*
-func Display(x *BType, readably bool) (string, error) {
-	if x.BBoolean != nil {
-		if x.BBoolean.Value {
-			return "true", nil
-		} else {
-			return "false", nil
-		}
-	}
-
-	case BFunc:
-		return "#<function>"
-
-	if x.BList != nil {
-		var res strings.Builder
-
-		for _, s := range x.BList.Values {
-			o, err := Display(s, readably)
-			if err != nil {
-				return "", err
-			}
-			res.WriteString(o)
-			res.WriteString(" ")
-		}
-
-		r, size := utf8.DecodeLastRuneInString(res.String())
-		if r == utf8.RuneError && (size == 0 || size == 1) {
-			size = 0
-		}
-
-		return fmt.Sprintf("(%s)", res.String()[:len(res.String())-size]), nil
-	}
-
-	if x.BNumber != nil {
-		return betterFormat(x.BNumber.Value), nil
-	}
-
-	if x.BString != nil {
-		if readably {
-			return fmt.Sprintf("\"%s\"", PrStr(x.BString.Value, readably)), nil
-		} else {
-			return x.BString.Value, nil
-		}
-	}
-
-	if x.BVector != nil {
-		var res strings.Builder
-
-		for _, s := range x.BVector.Values {
-			o, err := Display(s, readably)
-			if err != nil {
-				return "", err
-			}
-			res.WriteString(o)
-			res.WriteString(" ")
-		}
-
-		r, size := utf8.DecodeLastRuneInString(res.String())
-		if r == utf8.RuneError && (size == 0 || size == 1) {
-			size = 0
-		}
-
-		return fmt.Sprintf("[%s]", res.String()[:len(res.String())-size]), nil
-	}
-
-	if x.BHashMap != nil {
-		var res strings.Builder
-
-		for _, s := range x.BHashMap.Map {
-			o, err := Display(s.Key, readably)
-			res.WriteString(o)
-			if err != nil {
-				return "", err
-			}
-			res.WriteString(" ")
-			o1, err1 := Display(s.Value, readably)
-			res.WriteString(o1)
-			if err1 != nil {
-				return "", err1
-			}
-			res.WriteString(" ")
-		}
-
-		r, size := utf8.DecodeLastRuneInString(res.String())
-		if r == utf8.RuneError && (size == 0 || size == 1) {
-			size = 0
-		}
-
-		return fmt.Sprintf("{%s}", res.String()[:len(res.String())-size]), nil
-	}
-	
-	if x.BKeyword != nil {
-		return fmt.Sprintf(":%s", x.BKeyword.Value), nil
-	}
-
-	if x.BUnquote != nil {
-		o3, err3 := Display(x.BUnquote.Value, readably)
-		if err3 != nil {
-			return "", err3
-		}
-
-		return fmt.Sprintf("'%s", o3), nil
-	}
-
-	if x.BQuasiquote != nil {
-		o2, err2 := Display(x.BQuasiquote.Value, readably)
-		if err2 != nil {
-			return "", err2
-		}
-
-		return fmt.Sprintf("`%s", o2), nil
-	}
-
-	case BException:
-		return Display(val.Message, readably)
-
-	if x.BName != nil {
-		return x.BName.Value, nil
-	}
-
-	case BAtom:
-		return "(atom {})".format(Display(val.data, readably))
-
-	if x.BNil != nil {
-		return "nil", nil
-	}
-
-	panic(fmt.Sprintf("Unable to display: %+v", x))
-}
-*/
 
 /*
 func ParseFile(data string) (*Program) {

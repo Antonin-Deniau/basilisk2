@@ -1,4 +1,4 @@
 .PHONY: run_test
 
-run_test:
-	go run *.go
+test:
+	go run *.go -- ./test_files/shot_test.cl

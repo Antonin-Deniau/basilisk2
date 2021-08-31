@@ -46,6 +46,19 @@ func main() {
 
 	if len(os.Args) >= 2 {
 		//LoadStr(fmt.Sprintf("(load-file \"%s\" )", Escape(os.Args[1])), replEnv)
+		
+		// TEST PARSER
+		dat, err := os.ReadFile(os.Args[2])
+	    if err != nil {
+	        panic(err)
+	    }
+	    
+    	parse_err := TestParser(string(dat))
+	    if parse_err != nil {
+	        panic(parse_err)
+	    }
+
+
 	} else {
 		// LoadStr('(println (str "Mal [" *host-language* "]"))', replEnv)
 
