@@ -13,6 +13,7 @@ func DisplayBList(list *BList, sb *strings.Builder, readably bool) error {
 		if err != nil {
 			return err
 		}
+		sb.WriteRune(' ')
 	}
 	sb.WriteRune(')')
 
@@ -26,8 +27,27 @@ func DisplayBString(string *BString, sb *strings.Builder, readably bool) error {
 	return nil
 }
 
+func DisplayBNil(string *BNil, sb *strings.Builder, readably bool) error {
+	sb.WriteString("nil")
+	return nil
+}
+
+
+func DisplayBBool(string *BBool, sb *strings.Builder, readably bool) error {
+	if string.Value == true {
+		sb.WriteString("true")
+	} else {
+		sb.WriteString("false")
+	}
+	return nil
+}
+
 func Display(expr *BType, sb *strings.Builder, readably bool) error {
 	switch v := (*expr).(type) {
+	case BBool:
+		return DisplayBBool(&v, sb, readably)
+	case BNil:
+		return DisplayBNil(&v, sb, readably)
 	case BList:
 		return DisplayBList(&v, sb, readably)
 	case BString:

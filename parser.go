@@ -33,12 +33,16 @@ var close_parent_regex = regexp.MustCompile(`^\)`)
 var keyword_regex = regexp.MustCompile("^:([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
 var comment_regex = regexp.MustCompile(`^;[^\n]*\n`)
 var whitespace_regex = regexp.MustCompile(`^[\s,]+`)
+var bool_regex = regexp.MustCompile(`^(true|false)\b`)
+var nil_regex = regexp.MustCompile(`^nil\b`)
 
 
 var rules = Parser{
 	"Expr": {
 		Rule{"OpenParent", open_parent_regex, Push("List")},
 
+		Rule{"Nil", nil_regex, Read()},
+		Rule{"Bool", bool_regex, Read()},
 		Rule{"String", string_regex, Read()},
 		Rule{"Keyword", keyword_regex, Read()},
 		Rule{"Name", name_regex, Read()},
@@ -50,6 +54,8 @@ var rules = Parser{
 		Rule{"CloseParent", close_parent_regex, Pop()},
 		Rule{"OpenParent", open_parent_regex, Push("List")},
 
+		Rule{"Nil", nil_regex, Read()},
+		Rule{"Bool", bool_regex, Read()},
 		Rule{"String", string_regex, Read()},
 		Rule{"Name", name_regex, Read()},
 		Rule{"Keyword", keyword_regex, Read()},

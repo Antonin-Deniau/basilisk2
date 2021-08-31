@@ -47,6 +47,14 @@ func ProcessString(node *Node) (BType, error) {
 	return string, nil
 }
 
+func ProcessBool(node *Node) (BType, error) {
+	return BBool{Value: node.Value == "true"}, nil
+}
+
+func ProcessNil(node *Node) (BType, error) {
+	return BNil{}, nil
+}
+
 func ProcessNode(node *Node) (BType, error) {
 	switch node.Type {
 	case "Comment":
@@ -55,6 +63,10 @@ func ProcessNode(node *Node) (BType, error) {
 		for _, expr := range node.Childs {
 			return ProcessNode(expr)
 		}
+	case "Nil":
+		return ProcessNil(node)
+	case "Bool":
+		return ProcessBool(node)
 	case "List":
 		return ProcessList(node)
 	case "String":
