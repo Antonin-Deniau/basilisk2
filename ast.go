@@ -49,15 +49,15 @@ func ProcessString(node *Node) (BType, error) {
 
 func ProcessNode(node *Node) (BType, error) {
 	switch node.Type {
-	case "comment":
+	case "Comment":
 		return nil, nil
-	case "expr":
+	case "Expr":
 		for _, expr := range node.Childs {
 			return ProcessNode(expr)
 		}
-	case "list":
+	case "List":
 		return ProcessList(node)
-	case "string":
+	case "String":
 		return ProcessString(node)
 	default:
 		return nil, errors.New(fmt.Sprintf("Unable to find type %s", node.Type))

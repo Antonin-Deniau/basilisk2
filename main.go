@@ -4,6 +4,7 @@ import (
 	"os/user"
 	"os"
 	"fmt"
+	"strings"
 	"log"
 	"github.com/chzyer/readline"
 )
@@ -53,11 +54,19 @@ func main() {
 	        panic(err)
 	    }
 	    
-    	parse_err := TestParser(string(dat))
+    	bexpr, parse_err := Parse(string(dat))
 	    if parse_err != nil {
 	        panic(parse_err)
 	    }
 
+		var sb strings.Builder
+		disp_err := Display(bexpr, &sb, true)
+		if disp_err != nil {
+			fmt.Printf("ERROR %s\n", disp_err)
+			return
+		}
+
+		fmt.Printf("BType expression: %+v\n", sb.String())
 
 	} else {
 		// LoadStr('(println (str "Mal [" *host-language* "]"))', replEnv)

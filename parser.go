@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"errors"
 	"regexp"
 	"fmt"
@@ -198,92 +197,4 @@ func Parse(str_input string) (*BType, error) {
 	}
 
 	return &bexpr, nil
-	/*
-	var sb strings.Builder
-	disp_err := Display(&bexpr, &sb, true)
-	if disp_err != nil {
-		fmt.Printf("ERROR %s\n", bexpr_err)
-		return
-	}
-	fmt.Printf("BType expression: %+v\n", sb.String())
-	*/	
-}
-
-func Unescape(s string) string {
-	// strconv.Unquote
-	var res strings.Builder
-	esc := false
-
-	for _, i := range s {
-		if i == '\\' && esc == false {
-			esc = true
-		} else if i == '\\' && esc == true {
-			res.WriteRune('\\')
-			esc = false
-		} else if i == 'n' && esc == true {
-			res.WriteRune('\n')
-			esc = false
-		} else if i == '"' && esc == true {
-			res.WriteRune('"')
-			esc = false
-		} else {
-			res.WriteRune(i)
-			esc = false
-		}
-	}
-
-	return res.String()
-}
-
-func Escape(s string) string {
-	var res strings.Builder
-	for _, i := range s {
-		if i == '\\' {
-			res.WriteString("\\\\")
-		} else if i == '"' {
-			res.WriteString("\\\"")
-		} else if i == '\n' {
-			res.WriteString("\\n")
-		} else {
-			res.WriteRune(i)
-		}
-	}
-
-	return res.String()
-}
-
-func PrStr(x string, readably bool) string {
-     if readably {
-	     return Escape(x)
-     } else {
-	     return x
-     }
-}
-
-func betterFormat(num float64) string {
-    s := fmt.Sprintf("%.6f", num)
-    return strings.TrimRight(strings.TrimRight(s, "0"), ".")
-}
-
-/*
-func ParseFile(data string) (*Program) {
-	tree := &Program{}
-	err := parser.ParseString(data, tree)
-	if err != nil {
-		return err, nil
-	}
-
-	return nil, tree
-}
-*/
-
-func Prnt(e *BType) (error) {
-	var sb strings.Builder
-
-	err := Display(e, &sb, true)
-	if err != nil {
-		return err
-	}
-	fmt.Print(sb.String() + "\n")
-	return nil
 }
