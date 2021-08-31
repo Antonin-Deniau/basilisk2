@@ -24,9 +24,19 @@ func DisplayBList(list *BList, sb *strings.Builder, readably bool) error {
 	return nil
 }
 
+func DisplayBName(string *BName, sb *strings.Builder, readably bool) error {
+	sb.WriteString(string.Value)
+	return nil
+}
+
 func DisplayBString(string *BString, sb *strings.Builder, readably bool) error {
 	sb.WriteRune('"')
-	sb.WriteString(string.Value)
+	if readably == true {
+		sb.WriteString(PrStr(string.Value, readably))
+
+	} else {
+		sb.WriteString(string.Value)
+	}
 	sb.WriteRune('"')
 	return nil
 }
@@ -54,6 +64,8 @@ func Display(expr *BType, sb *strings.Builder, readably bool) error {
 		return DisplayBNil(&v, sb, readably)
 	case BList:
 		return DisplayBList(&v, sb, readably)
+	case BName:
+		return DisplayBName(&v, sb, readably)
 	case BString:
 		return DisplayBString(&v, sb, readably)
 	default:

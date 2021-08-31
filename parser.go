@@ -20,7 +20,6 @@ type ParserContext struct {
 	Stack []string
 	Text string
 	Parser Parser
-	Processed bool
 	Index int64
 	Ast *Node
 }
@@ -35,33 +34,27 @@ var comment_regex = regexp.MustCompile(`^;[^\n]*\n`)
 var whitespace_regex = regexp.MustCompile(`^[\s,]+`)
 var bool_regex = regexp.MustCompile(`^(true|false)\b`)
 var nil_regex = regexp.MustCompile(`^nil\b`)
+var quote_regex = regexp.MustCompile(`^'`)
+var nop_regex = regexp.MustCompile(`^`)
 
 
 var rules = Parser{
 	"Expr": {
-		Rule{"OpenParent", open_parent_regex, Push("List")},
+		Rule{"Comment", comment_regex, Read()},
+		Rule{"Whitespace", whitespace_regex, Read()},
+
+		Rule{"List", open_parent_regex, Push("List")},
+		Rule{"Quote", quote_regex, Push("Expr")},
 
 		Rule{"Nil", nil_regex, Read()},
 		Rule{"Bool", bool_regex, Read()},
 		Rule{"String", string_regex, Read()},
 		Rule{"Keyword", keyword_regex, Read()},
 		Rule{"Name", name_regex, Read()},
-
-		Rule{"Comment", comment_regex, Read()},
-		Rule{"Whitespace", whitespace_regex, Read()},
 	},
 	"List": {
-		Rule{"CloseParent", close_parent_regex, Pop()},
-		Rule{"OpenParent", open_parent_regex, Push("List")},
-
-		Rule{"Nil", nil_regex, Read()},
-		Rule{"Bool", bool_regex, Read()},
-		Rule{"String", string_regex, Read()},
-		Rule{"Name", name_regex, Read()},
-		Rule{"Keyword", keyword_regex, Read()},
-
-		Rule{"Comment", comment_regex, Read()},
-		Rule{"Whitespace", whitespace_regex, Read()},
+		Rule{"EndList", close_parent_regex, Pop()},
+		Rule{"Expr", nop_regex, Push("Expr")},
 	},
 }
 
@@ -74,7 +67,7 @@ func Push(next_expr string) Action {
 		ctx.Stack = append(ctx.Stack, next_expr)
 
 		child := &Node{
-			Type: next_expr,
+			Type: matcher_name,
 			Childs: make([]*Node, 0),
 			Parent: ctx.Ast,
 		}
@@ -98,6 +91,12 @@ func Read() Action {
 
 		ctx.Ast.Childs = append(ctx.Ast.Childs, child)
 
+		ctx.Stack = ctx.Stack[:len(ctx.Stack)-1]
+
+		if ctx.Ast.Parent != nil {
+			ctx.Ast = ctx.Ast.Parent
+		}
+
 		return nil
 	}
 }
@@ -118,7 +117,6 @@ func InitParserContext(str string) *ParserContext {
 	ctx := &ParserContext{
 		Stack: make([]string, 0),
 		Parser: rules,
-		Processed: true,
 		Index: 0,
 		Text: str,
 		Ast: &Node{Type: "Expr", Childs: make([]*Node, 0)},
@@ -129,11 +127,10 @@ func InitParserContext(str string) *ParserContext {
 }
 
 func ParseExpr(ctx *ParserContext) error {
-	ctx.Processed = true
-
+	processed := false
 	for {
+		processed = false
 		curr_expr := ctx.Parser[ctx.Stack[len(ctx.Stack)-1]]
-		ctx.Processed = false
 
 		for _, entry := range curr_expr {
 	    	found := entry.Regex.FindStringSubmatch(ctx.Text[ctx.Index:])
@@ -141,25 +138,29 @@ func ParseExpr(ctx *ParserContext) error {
 	    	//fmt.Printf("Checking [%s.%s] => %s\n", ctx.Stack[len(ctx.Stack)-1], entry.Name, ctx.Text[ctx.Index:])
 
 			if found != nil {
+				//fmt.Printf("======================\n")
+				//fmt.Printf("matched => %+v\n", found)
+				//fmt.Printf("m_len   => %+v\n", int64(len(found[0])))
+				//fmt.Printf("index   => %+v\n", ctx.Index)
+				//fmt.Printf("Matched [%s.%s] [%s]\n", ctx.Stack[len(ctx.Stack)-1], entry.Name, found[0])
+
+				processed = true
 				ctx.Index += int64(len(found[0]))
 
 				if len(found) != 1 {
-					//fmt.Printf("Matched [%s.%s] [%s]\n", ctx.Stack[len(ctx.Stack)-1], entry.Name, found[1])
-
 					err_action := entry.Action(ctx, entry.Name, found[1])
 					if err_action != nil {
 						return err_action
 					}
 				} else {
-					//fmt.Printf("Matched [%s.%s] _\n", ctx.Stack[len(ctx.Stack)-1], entry.Name)
 					err_action := entry.Action(ctx, entry.Name, "")
 					if err_action != nil {
 						return err_action
 					}
 				}
 
-				if int64(len(ctx.Text)) == ctx.Index {
-					if len(ctx.Stack) != 1 {
+				if len(ctx.Stack) == 0 {
+					if len(ctx.Stack) != 0 {
 						return errors.New("Unexpected EOF")
 					}
 
@@ -170,24 +171,14 @@ func ParseExpr(ctx *ParserContext) error {
 				break
 			}
 		}
+
+		if processed == false {
+			break
+		}
 	}
 
 	return errors.New(fmt.Sprintf("Error parsing all this mess\n"))
 }
-
-func TestParser(str_input string) error {
-	ctx := InitParserContext(fmt.Sprintf("%s\n", str_input))
-
-	parse_err := ParseExpr(ctx)
-	if parse_err != nil {
-		return parse_err
-	}
-
-	DisplayNode(ctx.Ast, 0)
-
-	return nil
-}
-
 
 func Parse(str_input string) (*BType, error) {
 	ctx := InitParserContext(fmt.Sprintf("%s\n", str_input))

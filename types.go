@@ -18,5 +18,10 @@ type BBool struct {
 	Value bool
 }
 
+type BName struct {
+	Meta *BType
+	Value string
+}
+
 
 type BNil struct {}
