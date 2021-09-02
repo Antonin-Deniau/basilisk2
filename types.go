@@ -8,6 +8,11 @@ type BString struct {
 	Value string
 }
 
+type BInt struct {
+	Meta *BType
+	Value int64
+}
+
 type BList struct {
 	Meta *BType
 	Value []*BType

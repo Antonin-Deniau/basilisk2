@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -81,6 +82,15 @@ func ProcessName(node *Node) (BType, error) {
 	return BName{Value: node.Value}, nil
 }
 
+func ProcessInt(node *Node) (BType, error) {
+	i, err := strconv.ParseInt(node.Value, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	return BInt{Value: int64(i)}, nil
+}
+
 func ProcessBool(node *Node) (BType, error) {
 	return BBool{Value: node.Value == "true"}, nil
 }
@@ -100,6 +110,8 @@ func ProcessNode(node *Node) (BType, error) {
 		return nil, nil
 	case "Whitespace":
 		return nil, nil
+	case "Int":
+		return ProcessInt(node)
 	case "Quote":
 		return ProcessQuote(node)
 	case "Expr":

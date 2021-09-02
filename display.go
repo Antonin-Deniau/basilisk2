@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 	"errors"
 	"fmt"
@@ -45,6 +46,11 @@ func DisplayBNil(node *BNil, sb *strings.Builder, readably bool) error {
 	return nil
 }
 
+func DisplayBInt(node *BInt, sb *strings.Builder, readably bool) error {
+	s := strconv.FormatInt(node.Value, 10)
+	sb.WriteString(s)
+	return nil
+}
 
 func DisplayBBool(node *BBool, sb *strings.Builder, readably bool) error {
 	if node.Value == true {
@@ -63,6 +69,8 @@ func DisplayKeyword(node *BKeyword, sb *strings.Builder, readably bool) error {
 
 func Display(node *BType, sb *strings.Builder, readably bool) error {
 	switch v := (*node).(type) {
+	case BInt:
+		return DisplayBInt(&v, sb, readably)
 	case BBool:
 		return DisplayBBool(&v, sb, readably)
 	case BNil:
