@@ -10,9 +10,9 @@ import (
 
 func DisplayNode(node *Node, deep int) {
 	if len(node.Childs) == 0 {
-		fmt.Printf("%s(%s = %s)\n", strings.Repeat(" ", deep), node.Type, node.Value)
+		fmt.Printf("%s(%s = [%s])\n", strings.Repeat(" ", deep), node.Type, node.Value)
 	} else {
-		fmt.Printf("%s(%s = %s\n", strings.Repeat(" ", deep), node.Type, node.Value)
+		fmt.Printf("%s(%s = [%s]\n", strings.Repeat(" ", deep), node.Type, node.Value)
 		for _, child := range node.Childs {
 			DisplayNode(child, deep + 2)
 		}

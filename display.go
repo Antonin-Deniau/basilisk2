@@ -6,10 +6,10 @@ import (
 	"fmt"
 )
 
-func DisplayBList(list *BList, sb *strings.Builder, readably bool) error {
+func DisplayBList(node *BList, sb *strings.Builder, readably bool) error {
 	sb.WriteRune('(')
-	end := len(list.Value) - 1
-	for i, expr := range list.Value {
+	end := len(node.Value) - 1
+	for i, expr := range node.Value {
 		err := Display(expr, sb, readably)
 		if err != nil {
 			return err
@@ -24,30 +24,30 @@ func DisplayBList(list *BList, sb *strings.Builder, readably bool) error {
 	return nil
 }
 
-func DisplayBName(string *BName, sb *strings.Builder, readably bool) error {
-	sb.WriteString(string.Value)
+func DisplayBName(node *BName, sb *strings.Builder, readably bool) error {
+	sb.WriteString(node.Value)
 	return nil
 }
 
-func DisplayBString(string *BString, sb *strings.Builder, readably bool) error {
+func DisplayBString(node *BString, sb *strings.Builder, readably bool) error {
 	sb.WriteRune('"')
 	if readably == true {
-		PrStr(sb, string.Value, readably)
+		PrStr(sb, node.Value, readably)
 	} else {
-		sb.WriteString(string.Value)
+		sb.WriteString(node.Value)
 	}
 	sb.WriteRune('"')
 	return nil
 }
 
-func DisplayBNil(string *BNil, sb *strings.Builder, readably bool) error {
+func DisplayBNil(node *BNil, sb *strings.Builder, readably bool) error {
 	sb.WriteString("nil")
 	return nil
 }
 
 
-func DisplayBBool(string *BBool, sb *strings.Builder, readably bool) error {
-	if string.Value == true {
+func DisplayBBool(node *BBool, sb *strings.Builder, readably bool) error {
+	if node.Value == true {
 		sb.WriteString("true")
 	} else {
 		sb.WriteString("false")
@@ -55,8 +55,14 @@ func DisplayBBool(string *BBool, sb *strings.Builder, readably bool) error {
 	return nil
 }
 
-func Display(expr *BType, sb *strings.Builder, readably bool) error {
-	switch v := (*expr).(type) {
+func DisplayKeyword(node *BKeyword, sb *strings.Builder, readably bool) error {
+	sb.WriteRune(':')
+	sb.WriteString(node.Value)
+	return nil
+}
+
+func Display(node *BType, sb *strings.Builder, readably bool) error {
+	switch v := (*node).(type) {
 	case BBool:
 		return DisplayBBool(&v, sb, readably)
 	case BNil:
@@ -65,10 +71,12 @@ func Display(expr *BType, sb *strings.Builder, readably bool) error {
 		return DisplayBList(&v, sb, readably)
 	case BName:
 		return DisplayBName(&v, sb, readably)
+	case BKeyword:
+		return DisplayKeyword(&v, sb, readably)
 	case BString:
 		return DisplayBString(&v, sb, readably)
 	default:
-		return errors.New(fmt.Sprintf("Unable to find type for btype %+v\n", expr))
+		return errors.New(fmt.Sprintf("Unable to find type for btype %+v\n", *node ))
 	}
 }
 

@@ -78,27 +78,63 @@ func main() {
 				break
 			}
 
-			/*err2 := Rep(line, replEnv)
+			//err2 := Rep(line, replEnv)
+			err2 := Rep(line)
 
 			if err2 != nil {
 				log.Print(fmt.Sprintf("Exception: %s", err2))
-			}*/
+			}
 
 			rl.SaveHistory(line)
 		}
 	}
 }
 
+func Read(e string) (*BType, error) {
+	bexpr, parse_err := Parse(e)
+    if parse_err != nil {
+        return nil, parse_err
+    }
+
+	return bexpr, nil
+}
+
+func Print(e *BType) error {
+	var sb strings.Builder
+
+	 err := Display(e, &sb, true)
+	 if err != nil {
+	 	return err
+	 }
+
+	os.Stdout.Write([]byte(sb.String()))
+	os.Stdout.Write([]byte("\n"))
+
+	return nil
+}
+
+func Rep(e string) (error) {
+//func Rep(e string, env *Env) (error) {
+	b, err := Read(fmt.Sprintf("%s \n", e))
+	if err != nil {
+		return err
+	}
+
+	/*
+	c, err := Evl(b, env)
+	if err != nil {
+		return err
+	}*/
+
+	print_err := Print(b)
+	if print_err != nil {
+		return print_err
+	}
+
+	return nil
+}
+
 /*
-func Read(e string) (BType, error) {
-	return Parse(e)
-}
-
-func Print(e string) {
-	os.Stdout.Write(Display(e, true))
-	os.Stdout.Write("\n")
-}
-
 func Rep(e string, env *Env) (error) {
 	b, err := Read(e)
 	if err != nil {

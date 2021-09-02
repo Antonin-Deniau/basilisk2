@@ -17,7 +17,6 @@ type Action func(ctx *ParserContext, matcher_name string, captured string) error
 type Parser map[string][]Rule
 
 type ParserContext struct {
-	Stack []string
 	Text string
 	Parser Parser
 	Index int64
@@ -29,44 +28,69 @@ var name_regex = regexp.MustCompile("^([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[
 var open_parent_regex = regexp.MustCompile(`^\(`)
 var close_parent_regex = regexp.MustCompile(`^\)`)
 var keyword_regex = regexp.MustCompile("^:([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
-var comment_regex = regexp.MustCompile(`^;[^\n]*\n`)
-var whitespace_regex = regexp.MustCompile(`^[\s,]+`)
+var whitespace_regex = regexp.MustCompile(`^((;[^\n]*\n)|[\s,]+)`)
 var bool_regex = regexp.MustCompile(`^(true|false)\b`)
 var nil_regex = regexp.MustCompile(`^nil\b`)
 var quote_regex = regexp.MustCompile(`^'`)
 var nop_regex = regexp.MustCompile(`^`)
 
-
 var rules = Parser{
 	"Expr": {
-		Rule{"Comment", comment_regex, Read()},
-		Rule{"Whitespace", whitespace_regex, Read()},
-
 		Rule{"List", open_parent_regex, Push("List")},
-		Rule{"Quote", quote_regex, Push("Expr")},
+		Rule{"Quote", quote_regex, PushOne("Expr")},
 
-		Rule{"Nil", nil_regex, Read()},
-		Rule{"Bool", bool_regex, Read()},
-		Rule{"String", string_regex, Read()},
-		Rule{"Keyword", keyword_regex, Read()},
-		Rule{"Name", name_regex, Read()},
+		Rule{"Nil", nil_regex, ReadRegex()},
+		Rule{"Bool", bool_regex, ReadRegex()},
+		Rule{"String", string_regex, ReadRegex()},
+		Rule{"Name", name_regex, ReadRegex()},
+		Rule{"Keyword", keyword_regex, ReadRegex()},
 	},
 	"List": {
+		Rule{"List", open_parent_regex, Push("List")},
+		Rule{"Quote", quote_regex, PushOne("Expr")},
+
+		Rule{"Nil", nil_regex, ReadRegex()},
+		Rule{"Bool", bool_regex, ReadRegex()},
+		Rule{"String", string_regex, ReadRegex()},
+		Rule{"Name", name_regex, ReadRegex()},
+		Rule{"Keyword", keyword_regex, ReadRegex()},
 		Rule{"EndList", close_parent_regex, Pop()},
-		Rule{"Expr", nop_regex, Push("Expr")},
 	},
 }
 
-
+func Ignore(ctx *ParserContext) {
+	found := whitespace_regex.FindStringSubmatch(ctx.Text[ctx.Index:])
+	if found != nil {
+		ctx.Index += int64(len(found[0]))
+	}
+}
 
 func Push(next_expr string) Action {
 	return func(ctx *ParserContext, matcher_name string, captured string) error {
-		//fmt.Printf("PUSH: %s\n", next_expr)
-
-		ctx.Stack = append(ctx.Stack, next_expr)
-
 		child := &Node{
 			Type: matcher_name,
+			Childs: make([]*Node, 0),
+			Repeat: true,
+			Validated: false,
+			ParserRule: next_expr,
+			Parent: ctx.Ast,
+		}
+
+		ctx.Ast.Childs = append(ctx.Ast.Childs, child)
+		ctx.Ast = child
+
+		return nil
+	}
+}
+
+
+func PushOne(next_expr string) Action {
+	return func(ctx *ParserContext, matcher_name string, captured string) error {
+		child := &Node{
+			Type: matcher_name,
+			Repeat: false,
+			Validated: false,
+			ParserRule: next_expr,
 			Childs: make([]*Node, 0),
 			Parent: ctx.Ast,
 		}
@@ -78,23 +102,16 @@ func Push(next_expr string) Action {
 	}
 }
 
-func Read() Action {
+func ReadRegex() Action {
 	return func(ctx *ParserContext, matcher_name string, captured string) error {
-		//fmt.Printf("READ: [%s]\n", captured)
-
 		child := &Node{
 			Type: matcher_name,
 			Parent: ctx.Ast,
 			Value: captured,
+			Validated: true,
 		}
 
 		ctx.Ast.Childs = append(ctx.Ast.Childs, child)
-
-		ctx.Stack = ctx.Stack[:len(ctx.Stack)-1]
-
-		if ctx.Ast.Parent != nil {
-			ctx.Ast = ctx.Ast.Parent
-		}
 
 		return nil
 	}
@@ -102,10 +119,7 @@ func Read() Action {
 
 func Pop() Action {
 	return func(ctx *ParserContext, matcher_name string, captured string) error {
-		//fmt.Printf("POP [%s]\n", matcher_name)
-
-		ctx.Stack = ctx.Stack[:len(ctx.Stack)-1]
-
+		ctx.Ast.Validated = true
 		ctx.Ast = ctx.Ast.Parent
 
 		return nil
@@ -114,65 +128,66 @@ func Pop() Action {
 
 func InitParserContext(str string) *ParserContext {
 	ctx := &ParserContext{
-		Stack: make([]string, 0),
 		Parser: rules,
 		Index: 0,
 		Text: str,
-		Ast: &Node{Type: "Expr", Childs: make([]*Node, 0)},
+		Ast: &Node{Type: "Expr", Validated: false, Repeat: false, ParserRule: "Expr", Childs: make([]*Node, 0)},
 	}
 
-	ctx.Stack = append(ctx.Stack, "Expr")
 	return ctx
 }
 
 func ParseExpr(ctx *ParserContext) error {
-	processed := false
+	index := 0
+
 	for {
-		processed = false
-		curr_expr := ctx.Parser[ctx.Stack[len(ctx.Stack)-1]]
+		curr_expr := ctx.Parser[ctx.Ast.ParserRule]
+		Ignore(ctx)
+				index = 0
 
 		for _, entry := range curr_expr {
 	    	found := entry.Regex.FindStringSubmatch(ctx.Text[ctx.Index:])
-
-	    	//fmt.Printf("Checking [%s.%s] => %s\n", ctx.Stack[len(ctx.Stack)-1], entry.Name, ctx.Text[ctx.Index:])
+			fmt.Printf("Check [%s.%s] == %s\n", ctx.Ast.Type, entry.Name, found)
 
 			if found != nil {
-				//fmt.Printf("======================\n")
-				//fmt.Printf("matched => %+v\n", found)
-				//fmt.Printf("m_len   => %+v\n", int64(len(found[0])))
-				//fmt.Printf("index   => %+v\n", ctx.Index)
-				//fmt.Printf("Matched [%s.%s] [%s]\n", ctx.Stack[len(ctx.Stack)-1], entry.Name, found[0])
+				index += 1
 
-				processed = true
 				ctx.Index += int64(len(found[0]))
 
+				var test_str string
 				if len(found) != 1 {
-					err_action := entry.Action(ctx, entry.Name, found[1])
-					if err_action != nil {
-						return err_action
-					}
+					test_str = found[1]
 				} else {
-					err_action := entry.Action(ctx, entry.Name, "")
-					if err_action != nil {
-						return err_action
-					}
+					test_str = ""
 				}
 
-				if len(ctx.Stack) == 0 {
-					if len(ctx.Stack) != 0 {
-						return errors.New("Unexpected EOF")
-					}
-
-					ctx.Ast = FindRootNode(ctx.Ast)
-					return nil
+				err_action := entry.Action(ctx, entry.Name, test_str)
+				if err_action != nil {
+					return err_action
 				}
+
+				fmt.Printf("matched => %+v\n", found[0])
+				fmt.Printf("======================\n")
 
 				break
 			}
 		}
 
-		if processed == false {
-			break
+		if ctx.Ast.Repeat == true {
+			continue
+		} else {
+			if ctx.Ast.Validated == true {
+				if ctx.Ast.Parent == nil {
+					return nil
+				} else {
+					ctx.Ast = ctx.Ast.Parent
+					continue
+				}
+			}
+
+			ctx.Ast.Validated = true
+
+			continue
 		}
 	}
 
@@ -180,9 +195,11 @@ func ParseExpr(ctx *ParserContext) error {
 }
 
 func Parse(str_input string) (*BType, error) {
-	ctx := InitParserContext(fmt.Sprintf("%s\n", str_input))
+	ctx := InitParserContext(str_input)
 
 	parse_err := ParseExpr(ctx)
+	DisplayNode(ctx.Ast, 2)
+
 	if parse_err != nil {
 		return nil, parse_err
 	}

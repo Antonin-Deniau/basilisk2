@@ -23,5 +23,10 @@ type BName struct {
 	Value string
 }
 
+type BKeyword struct {
+	Meta *BType
+	Value string
+}
+
 
 type BNil struct {}

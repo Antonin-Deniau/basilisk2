@@ -8,7 +8,10 @@ import (
 
 type Node struct {
 	Value string
+	ParserRule string
 	Type string
+	Repeat bool
+	Validated bool
 	Parent *Node
 	Childs []*Node 
 }
@@ -27,36 +30,36 @@ func ProcessQuote(node *Node) (BType, error) {
 	list := BList{Value: make([]*BType, 0)}
 
 	name := BType(BName{ Value: "quote" })
-
 	list.Value = append(list.Value, &name)
 
-	for _, child := range node.Childs {
-		res_node, err := ProcessNode(child)
-		if res_node == nil {
-			return nil, errors.New("No expression after quote")
-		}
-
+	for _, expr := range node.Childs {
+		res_node, err := ProcessNode(expr)
 		if err != nil {
 			return nil, err
 		}
 
+		if res_node == nil {
+			continue
+		}
 		list.Value = append(list.Value, &res_node)
+
 		return list, nil
 	}
 
-	return nil, nil
+
+	return nil, errors.New("No expression after quote")
 }
 
 func ProcessList(node *Node) (BType, error) {
 	list := BList{Value: make([]*BType, 0)}
 	for _, child := range node.Childs {
 		res_node, err := ProcessNode(child)
-		if res_node == nil {
-			continue
-		}
-
 		if err != nil {
 			return nil, err
+		}
+
+		if res_node == nil {
+			continue
 		}
 
 		list.Value = append(list.Value, &res_node)
@@ -86,15 +89,30 @@ func ProcessNil(node *Node) (BType, error) {
 	return BNil{}, nil
 }
 
+func ProcessKeyWord(node *Node) (BType, error) {
+	return BKeyword{Value: node.Value}, nil
+}
+
 func ProcessNode(node *Node) (BType, error) {
+	//fmt.Printf("=> %s = %s\n", node.Type, node.Value)
 	switch node.Type {
 	case "Comment":
+		return nil, nil
+	case "Whitespace":
 		return nil, nil
 	case "Quote":
 		return ProcessQuote(node)
 	case "Expr":
-		return ProcessNode(node.Childs[0])
-		//for _, expr := range node.Childs {
+		for _, expr := range node.Childs {
+			res_node, err := ProcessNode(expr)
+			if err != nil {
+				return nil, err
+			}
+
+			return res_node, nil
+		}
+	case "Keyword":
+		return ProcessKeyWord(node)
 	case "Nil":
 		return ProcessNil(node)
 	case "Name":
