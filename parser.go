@@ -28,7 +28,7 @@ var name_regex = regexp.MustCompile("^([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[
 var open_parent_regex = regexp.MustCompile(`^\(`)
 var close_parent_regex = regexp.MustCompile(`^\)`)
 var keyword_regex = regexp.MustCompile("^:([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
-var whitespace_regex = regexp.MustCompile(`^((;[^\n]*\n)|[\s,]+)`)
+var whitespace_regex = regexp.MustCompile(`^((;[^\n]*$)|[\s,]+)`)
 var bool_regex = regexp.MustCompile(`^(true|false)\b`)
 var nil_regex = regexp.MustCompile(`^nil\b`)
 var quote_regex = regexp.MustCompile(`^'`)
@@ -138,19 +138,20 @@ func InitParserContext(str string) *ParserContext {
 }
 
 func ParseExpr(ctx *ParserContext) error {
-	index := 0
+	matched := false
 
 	for {
+		matched = false
+
 		curr_expr := ctx.Parser[ctx.Ast.ParserRule]
 		Ignore(ctx)
-				index = 0
 
 		for _, entry := range curr_expr {
 	    	found := entry.Regex.FindStringSubmatch(ctx.Text[ctx.Index:])
 			fmt.Printf("Check [%s.%s] == %s\n", ctx.Ast.Type, entry.Name, found)
 
 			if found != nil {
-				index += 1
+				matched = true
 
 				ctx.Index += int64(len(found[0]))
 
@@ -173,11 +174,27 @@ func ParseExpr(ctx *ParserContext) error {
 			}
 		}
 
+
+		// >>>IGNORE EOF WHITESPACES
+		if ctx.Ast.Parent == nil {
+			Ignore(ctx)
+		}
+
+		if matched == false {
+			if int64(len(ctx.Text)) != ctx.Index  {
+				break
+			} else {
+				return nil
+			}
+		}
+		// <<<IGNORE EOF WHITESPACES
+
 		if ctx.Ast.Repeat == true {
 			continue
 		} else {
 			if ctx.Ast.Validated == true {
 				if ctx.Ast.Parent == nil {
+
 					return nil
 				} else {
 					ctx.Ast = ctx.Ast.Parent
@@ -191,7 +208,7 @@ func ParseExpr(ctx *ParserContext) error {
 		}
 	}
 
-	return errors.New(fmt.Sprintf("Error parsing all this mess\n"))
+	return errors.New(fmt.Sprintf("Error cannot parse, stopped at =>%s\n", ctx.Text[ctx.Index:]))
 }
 
 func Parse(str_input string) (*BType, error) {
