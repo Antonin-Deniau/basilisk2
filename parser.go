@@ -25,14 +25,17 @@ type ParserContext struct {
 
 
 // TO IMPLEMENT
-// metadata: "^" obj obj
-// deref: "@" obj
+
+// types
 // hashmap: "{" ((keyword|string) obj)* "}"
 // vector: "[" obj* "]"
+// variadic: "&"
+
+// sugars
+// deref: "@" obj
 // quasiquote: "`" obj
 // unquote: "~" obj
 // spliceunquote: "~@" obj
-// variadic: "&"
 
 var string_regex = regexp.MustCompile(`^"((:?\\.|[^"\\])*)"`)
 var name_regex = regexp.MustCompile("^([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
@@ -145,9 +148,9 @@ func InitParserContext(str string) *ParserContext {
 }
 
 func ParseExpr(ctx *ParserContext) error {
-	//matched := false
-
 	for {
+		Ignore(ctx)
+
 		if ctx.Ast.Limit != -1 && ctx.Ast.Counter >= ctx.Ast.Limit {
 			//fmt.Println("POP")
 			//fmt.Printf("%+v\n", ctx.Ast)
@@ -158,9 +161,6 @@ func ParseExpr(ctx *ParserContext) error {
 			ctx.Ast = ctx.Ast.Parent
 		}
 
-		//matched = false
-
-		Ignore(ctx)
 		curr_expr := ctx.Parser[ctx.Ast.ParserRule]
 
 		for _, entry := range curr_expr {
@@ -193,23 +193,6 @@ func ParseExpr(ctx *ParserContext) error {
 				break
 			}
 		}
-
-		/*
-		// >>>IGNORE EOF WHITESPACES
-		if ctx.Ast.Parent == nil {
-			Ignore(ctx)
-		}
-
-		if matched == false {
-			if int64(len(ctx.Text)) != ctx.Index  {
-				break
-			} else {
-				return nil
-			}
-		}
-		// <<<IGNORE EOF WHITESPACES
-		*/
-
 	}
 
 	return errors.New(fmt.Sprintf("Error cannot parse, stopped at =>%s\n", ctx.Text[ctx.Index:]))
