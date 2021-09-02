@@ -23,6 +23,17 @@ type ParserContext struct {
 	Ast *Node
 }
 
+
+// TO IMPLEMENT
+// metadata: "^" obj obj
+// deref: "@" obj
+// hashmap: "{" ((keyword|string) obj)* "}"
+// vector: "[" obj* "]"
+// quasiquote: "`" obj
+// unquote: "~" obj
+// spliceunquote: "~@" obj
+// variadic: "&"
+
 var string_regex = regexp.MustCompile(`^"((:?\\.|[^"\\])*)"`)
 var name_regex = regexp.MustCompile("^([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
 var open_parent_regex = regexp.MustCompile(`^\(`)
@@ -33,7 +44,6 @@ var bool_regex = regexp.MustCompile(`^(true|false)\b`)
 var int_regex = regexp.MustCompile(`^(-?[0-9]+)`)
 var nil_regex = regexp.MustCompile(`^nil\b`)
 var quote_regex = regexp.MustCompile(`^'`)
-var nop_regex = regexp.MustCompile(`^`)
 
 var rules = Parser{
 	"Expr": {
@@ -151,7 +161,7 @@ func ParseExpr(ctx *ParserContext) error {
 
 		for _, entry := range curr_expr {
 	    	found := entry.Regex.FindStringSubmatch(ctx.Text[ctx.Index:])
-			fmt.Printf("Check [%s.%s] == %s\n", ctx.Ast.Type, entry.Name, found)
+			//fmt.Printf("Check [%s.%s] == %s\n", ctx.Ast.Type, entry.Name, found)
 
 			if found != nil {
 				matched = true
@@ -170,8 +180,8 @@ func ParseExpr(ctx *ParserContext) error {
 					return err_action
 				}
 
-				fmt.Printf("matched => %+v\n", found[0])
-				fmt.Printf("======================\n")
+				//fmt.Printf("matched => %+v\n", found[0])
+				//fmt.Printf("======================\n")
 
 				break
 			}
