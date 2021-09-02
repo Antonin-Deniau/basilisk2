@@ -44,11 +44,13 @@ var bool_regex = regexp.MustCompile(`^(true|false)\b`)
 var int_regex = regexp.MustCompile(`^(-?[0-9]+)`)
 var nil_regex = regexp.MustCompile(`^nil\b`)
 var quote_regex = regexp.MustCompile(`^'`)
+var meta_regex = regexp.MustCompile(`^\^`)
 
 var rules = Parser{
 	"Expr": {
-		Rule{"List", open_parent_regex, Push("List")},
-		Rule{"Quote", quote_regex, PushOne("Expr")},
+		Rule{"List", open_parent_regex, Push("List", -1)},
+		Rule{"Quote", quote_regex, Push("Expr", 1)},
+		Rule{"Meta", meta_regex, Push("Expr", 2)},
 
 		Rule{"Nil", nil_regex, ReadRegex()},
 		Rule{"Bool", bool_regex, ReadRegex()},
@@ -58,8 +60,9 @@ var rules = Parser{
 		Rule{"Keyword", keyword_regex, ReadRegex()},
 	},
 	"List": {
-		Rule{"List", open_parent_regex, Push("List")},
-		Rule{"Quote", quote_regex, PushOne("Expr")},
+		Rule{"List", open_parent_regex, Push("List", -1)},
+		Rule{"Quote", quote_regex, Push("Expr", 1)},
+		Rule{"Meta", meta_regex, Push("Expr", 2)},
 
 		Rule{"Nil", nil_regex, ReadRegex()},
 		Rule{"Bool", bool_regex, ReadRegex()},
@@ -67,6 +70,7 @@ var rules = Parser{
 		Rule{"Int", int_regex, ReadRegex()},
 		Rule{"Name", name_regex, ReadRegex()},
 		Rule{"Keyword", keyword_regex, ReadRegex()},
+
 		Rule{"EndList", close_parent_regex, Pop()},
 	},
 }
@@ -78,35 +82,18 @@ func Ignore(ctx *ParserContext) {
 	}
 }
 
-func Push(next_expr string) Action {
+func Push(next_expr string, limit int) Action {
 	return func(ctx *ParserContext, matcher_name string, captured string) error {
 		child := &Node{
 			Type: matcher_name,
 			Childs: make([]*Node, 0),
-			Repeat: true,
-			Validated: false,
+			Limit: limit,
+			Counter: 0,
 			ParserRule: next_expr,
 			Parent: ctx.Ast,
 		}
-
-		ctx.Ast.Childs = append(ctx.Ast.Childs, child)
-		ctx.Ast = child
-
-		return nil
-	}
-}
-
-
-func PushOne(next_expr string) Action {
-	return func(ctx *ParserContext, matcher_name string, captured string) error {
-		child := &Node{
-			Type: matcher_name,
-			Repeat: false,
-			Validated: false,
-			ParserRule: next_expr,
-			Childs: make([]*Node, 0),
-			Parent: ctx.Ast,
-		}
+		
+		ctx.Ast.Counter += 1
 
 		ctx.Ast.Childs = append(ctx.Ast.Childs, child)
 		ctx.Ast = child
@@ -121,9 +108,11 @@ func ReadRegex() Action {
 			Type: matcher_name,
 			Parent: ctx.Ast,
 			Value: captured,
-			Validated: true,
+			Limit: 1,
+			Counter: 1,
 		}
 
+		ctx.Ast.Counter += 1
 		ctx.Ast.Childs = append(ctx.Ast.Childs, child)
 
 		return nil
@@ -132,7 +121,6 @@ func ReadRegex() Action {
 
 func Pop() Action {
 	return func(ctx *ParserContext, matcher_name string, captured string) error {
-		ctx.Ast.Validated = true
 		ctx.Ast = ctx.Ast.Parent
 
 		return nil
@@ -144,28 +132,46 @@ func InitParserContext(str string) *ParserContext {
 		Parser: rules,
 		Index: 0,
 		Text: str,
-		Ast: &Node{Type: "Expr", Validated: false, Repeat: false, ParserRule: "Expr", Childs: make([]*Node, 0)},
+		Ast: &Node{
+			Type: "Expr",
+			ParserRule: "Expr",
+			Limit: 1,
+			Counter: 0,
+			Childs: make([]*Node, 0),
+		},
 	}
 
 	return ctx
 }
 
 func ParseExpr(ctx *ParserContext) error {
-	matched := false
+	//matched := false
 
 	for {
-		matched = false
+		if ctx.Ast.Limit != -1 && ctx.Ast.Counter >= ctx.Ast.Limit {
+			//fmt.Println("POP")
+			//fmt.Printf("%+v\n", ctx.Ast)
+			if ctx.Ast.Parent == nil {
+				return nil
+			}
 
-		curr_expr := ctx.Parser[ctx.Ast.ParserRule]
+			ctx.Ast = ctx.Ast.Parent
+		}
+
+		//matched = false
+
 		Ignore(ctx)
+		curr_expr := ctx.Parser[ctx.Ast.ParserRule]
 
 		for _, entry := range curr_expr {
 	    	found := entry.Regex.FindStringSubmatch(ctx.Text[ctx.Index:])
 			//fmt.Printf("Check [%s.%s] == %s\n", ctx.Ast.Type, entry.Name, found)
+			//fmt.Printf("Check %s\n", ctx.Text[ctx.Index:])
+			//fmt.Printf("%n\n", ctx.Ast.Counter)
+			//fmt.Printf("%n\n", ctx.Ast.Limit)
 
 			if found != nil {
-				matched = true
-
+				//matched = true
 				ctx.Index += int64(len(found[0]))
 
 				var test_str string
@@ -180,14 +186,15 @@ func ParseExpr(ctx *ParserContext) error {
 					return err_action
 				}
 
-				//fmt.Printf("matched => %+v\n", found[0])
-				//fmt.Printf("======================\n")
-
+				//fmt.Printf("matched => [%s]\n", found[0])
+				//fmt.Printf("Ns [%s.%s]\n", ctx.Ast.Type, entry.Name)
+				//fmt.Printf("Quantity %d/%d\n", ctx.Ast.Counter, ctx.Ast.Limit)
+	    		//fmt.Println("========================================")
 				break
 			}
 		}
 
-
+		/*
 		// >>>IGNORE EOF WHITESPACES
 		if ctx.Ast.Parent == nil {
 			Ignore(ctx)
@@ -201,24 +208,8 @@ func ParseExpr(ctx *ParserContext) error {
 			}
 		}
 		// <<<IGNORE EOF WHITESPACES
+		*/
 
-		if ctx.Ast.Repeat == true {
-			continue
-		} else {
-			if ctx.Ast.Validated == true {
-				if ctx.Ast.Parent == nil {
-
-					return nil
-				} else {
-					ctx.Ast = ctx.Ast.Parent
-					continue
-				}
-			}
-
-			ctx.Ast.Validated = true
-
-			continue
-		}
 	}
 
 	return errors.New(fmt.Sprintf("Error cannot parse, stopped at =>%s\n", ctx.Text[ctx.Index:]))

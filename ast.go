@@ -11,20 +11,10 @@ type Node struct {
 	Value string
 	ParserRule string
 	Type string
-	Repeat bool
-	Validated bool
+	Counter int
+	Limit int
 	Parent *Node
 	Childs []*Node 
-}
-
-
-func FindRootNode(node *Node) *Node {
-	curr_node := node
-	for curr_node.Parent != nil {
-		curr_node = curr_node.Parent
-	}
-
-	return curr_node
 }
 
 func ProcessQuote(node *Node) (BType, error) {
@@ -91,6 +81,27 @@ func ProcessInt(node *Node) (BType, error) {
 	return BInt{Value: int64(i)}, nil
 }
 
+func ProcessMeta(node *Node) (BType, error) {
+	list := BList{Value: make([]*BType, 0)}
+
+	name := BType(BName{ Value: "with-meta" })
+	list.Value = append(list.Value, &name)
+
+	for i := range node.Childs {
+        i = len(node.Childs) - 1 - i
+        expr := node.Childs[i]
+
+		res_node, err := ProcessNode(expr)
+		if err != nil {
+			return nil, err
+		}
+
+		list.Value = append(list.Value, &res_node)
+	}
+
+	return list, nil
+}
+
 func ProcessBool(node *Node) (BType, error) {
 	return BBool{Value: node.Value == "true"}, nil
 }
@@ -123,6 +134,8 @@ func ProcessNode(node *Node) (BType, error) {
 
 			return res_node, nil
 		}
+	case "Meta":
+		return ProcessMeta(node)
 	case "Keyword":
 		return ProcessKeyWord(node)
 	case "Nil":

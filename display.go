@@ -61,7 +61,7 @@ func DisplayBBool(node *BBool, sb *strings.Builder, readably bool) error {
 	return nil
 }
 
-func DisplayKeyword(node *BKeyword, sb *strings.Builder, readably bool) error {
+func DisplayBKeyword(node *BKeyword, sb *strings.Builder, readably bool) error {
 	sb.WriteRune(':')
 	sb.WriteString(node.Value)
 	return nil
@@ -80,7 +80,7 @@ func Display(node *BType, sb *strings.Builder, readably bool) error {
 	case BName:
 		return DisplayBName(&v, sb, readably)
 	case BKeyword:
-		return DisplayKeyword(&v, sb, readably)
+		return DisplayBKeyword(&v, sb, readably)
 	case BString:
 		return DisplayBString(&v, sb, readably)
 	default:
