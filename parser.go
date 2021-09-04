@@ -27,7 +27,6 @@ type ParserContext struct {
 // TO IMPLEMENT
 
 // types
-// hashmap: "{" ((keyword|string) obj)* "}"
 // vector: "[" obj* "]"
 
 // sugars
@@ -50,6 +49,8 @@ var variadic_regex = regexp.MustCompile(`^&`)
 var meta_regex = regexp.MustCompile(`^\^`)
 var hashmap_open_regex = regexp.MustCompile(`^{`)
 var hashmap_close_regex = regexp.MustCompile(`^}`)
+var vector_open_regex = regexp.MustCompile(`^\[`)
+var vector_close_regex = regexp.MustCompile(`^\]`)
 
 var rules = Parser{
 	"Expr": {
@@ -57,6 +58,7 @@ var rules = Parser{
 		Rule{"Quote", quote_regex, Push("Expr", 1)},
 		Rule{"Meta", meta_regex, Push("Expr", 2)},
 		Rule{"Hashmap", hashmap_open_regex, Push("Hashmap", -1)},
+		Rule{"Vector", vector_open_regex, Push("Vector", -1)},
 
 		Rule{"Nil", nil_regex, ReadRegex()},
 		Rule{"Bool", bool_regex, ReadRegex()},
@@ -66,11 +68,29 @@ var rules = Parser{
 		Rule{"Keyword", keyword_regex, ReadRegex()},
 		Rule{"Variadic", variadic_regex, ReadRegex()},
 	},
+	"Vector": {
+		Rule{"List", open_parent_regex, Push("List", -1)},
+		Rule{"Quote", quote_regex, Push("Expr", 1)},
+		Rule{"Meta", meta_regex, Push("Expr", 2)},
+		Rule{"Hashmap", hashmap_open_regex, Push("Hashmap", -1)},
+		Rule{"Vector", vector_open_regex, Push("Vector", -1)},
+
+		Rule{"Nil", nil_regex, ReadRegex()},
+		Rule{"Bool", bool_regex, ReadRegex()},
+		Rule{"String", string_regex, ReadRegex()},
+		Rule{"Int", int_regex, ReadRegex()},
+		Rule{"Name", name_regex, ReadRegex()},
+		Rule{"Keyword", keyword_regex, ReadRegex()},
+		Rule{"Variadic", variadic_regex, ReadRegex()},
+
+		Rule{"EndVector", vector_close_regex, Pop()},
+	},
 	"Hashmap": {
 		Rule{"List", open_parent_regex, Push("List", -1)},
 		Rule{"Quote", quote_regex, Push("Expr", 1)},
 		Rule{"Meta", meta_regex, Push("Expr", 2)},
 		Rule{"Hashmap", hashmap_open_regex, Push("Hashmap", -1)},
+		Rule{"Vector", vector_open_regex, Push("Vector", -1)},
 
 		Rule{"Nil", nil_regex, ReadRegex()},
 		Rule{"Bool", bool_regex, ReadRegex()},
@@ -87,6 +107,7 @@ var rules = Parser{
 		Rule{"Quote", quote_regex, Push("Expr", 1)},
 		Rule{"Meta", meta_regex, Push("Expr", 2)},
 		Rule{"Hashmap", hashmap_open_regex, Push("Hashmap", -1)},
+		Rule{"Vector", vector_open_regex, Push("Vector", -1)},
 
 		Rule{"Nil", nil_regex, ReadRegex()},
 		Rule{"Bool", bool_regex, ReadRegex()},

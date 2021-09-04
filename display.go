@@ -25,6 +25,24 @@ func DisplayBList(node *BList, sb *strings.Builder, readably bool) error {
 	return nil
 }
 
+func DisplayBVector(node *BVector, sb *strings.Builder, readably bool) error {
+	sb.WriteRune('[')
+	end := len(node.Value) - 1
+	for i, expr := range node.Value {
+		err := Display(expr, sb, readably)
+		if err != nil {
+			return err
+		}
+
+		if i != end {
+			sb.WriteRune(' ')
+		}
+	}
+	sb.WriteRune(']')
+
+	return nil
+}
+
 func DisplayBHashmap(node *BHashmap, sb *strings.Builder, readably bool) error {
 	sb.WriteRune('{')
 	end := len(node.Value) - 1
@@ -101,6 +119,8 @@ func Display(node *BType, sb *strings.Builder, readably bool) error {
 		return DisplayBBool(&v, sb, readably)
 	case BNil:
 		return DisplayBNil(&v, sb, readably)
+	case BVector:
+		return DisplayBVector(&v, sb, readably)
 	case BList:
 		return DisplayBList(&v, sb, readably)
 	case BName:

@@ -25,6 +25,11 @@ type BList struct {
 	Value []*BType
 }
 
+type BVector struct {
+	Meta *BType
+	Value []*BType
+}
+
 type BBool struct {
 	Meta *BType
 	Value bool

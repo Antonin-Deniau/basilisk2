@@ -59,6 +59,23 @@ func ProcessList(node *Node) (BType, error) {
 	return list, nil
 }
 
+func ProcessVector(node *Node) (BType, error) {
+	vector := BVector{Value: make([]*BType, 0)}
+	for _, child := range node.Childs {
+		res_node, err := ProcessNode(child)
+		if err != nil {
+			return nil, err
+		}
+
+		if res_node == nil {
+			continue
+		}
+
+		vector.Value = append(vector.Value, &res_node)
+	}
+
+	return vector, nil
+}
 
 func ProcessHashmap(node *Node) (BType, error) {
 	if len(node.Childs) % 2 != 0 {
@@ -179,6 +196,8 @@ func ProcessNode(node *Node) (BType, error) {
 		}
 	case "Meta":
 		return ProcessMeta(node)
+	case "Vector":
+		return ProcessVector(node)
 	case "Keyword":
 		return ProcessKeyWord(node)
 	case "Nil":
