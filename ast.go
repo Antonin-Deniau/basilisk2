@@ -17,10 +17,10 @@ type Node struct {
 	Childs []*Node 
 }
 
-func ProcessQuote(node *Node) (BType, error) {
+func ProcessSugar(node *Node, val string) (BType, error) {
 	list := BList{Value: make([]*BType, 0)}
 
-	name := BType(BName{ Value: "quote" })
+	name := BType(BName{ Value: val })
 	list.Value = append(list.Value, &name)
 
 	for _, expr := range node.Childs {
@@ -183,8 +183,16 @@ func ProcessNode(node *Node) (BType, error) {
 		return nil, nil
 	case "Int":
 		return ProcessInt(node)
+	case "Deref":
+		return ProcessSugar(node, "deref")
 	case "Quote":
-		return ProcessQuote(node)
+		return ProcessSugar(node, "quote")
+	case "Quasiquote":
+		return ProcessSugar(node, "quasiquote")
+	case "Unquote":
+		return ProcessSugar(node, "unquote")
+	case "SpliceUnquote":
+		return ProcessSugar(node, "spliceunquote")
 	case "Expr":
 		for _, expr := range node.Childs {
 			res_node, err := ProcessNode(expr)

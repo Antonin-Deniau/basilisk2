@@ -1,1 +1,1 @@
-( :okqsdf "lol", & '[1 2 3 {}] { :a 1 :b (1 2 3) :sdqsd 2 } nil true 1 -4 false ^(1 2 3) "qsdf" '("qsdfqsdfqsd\\  \ \" \\\\" "qsdf" ) "lol") ; this is a comment
+( ~:okqsdf @~@~`"lol", & '[1 2 3 {}] { :a 1 :b (1 2 3) :sdqsd 2 } @nil true 1 -4 false ^(1 2 3) "qsdf" '("qsdfqsdfqsd\\  \ \" \\\\" "qsdf" ) "lol") ; this is a comment

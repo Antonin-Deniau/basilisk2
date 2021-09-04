@@ -26,15 +26,6 @@ type ParserContext struct {
 
 // TO IMPLEMENT
 
-// types
-// vector: "[" obj* "]"
-
-// sugars
-// deref: "@" obj
-// quasiquote: "`" obj
-// unquote: "~" obj
-// spliceunquote: "~@" obj
-
 var string_regex = regexp.MustCompile(`^"((:?\\.|[^"\\])*)"`)
 var name_regex = regexp.MustCompile("^([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
 var open_parent_regex = regexp.MustCompile(`^\(`)
@@ -45,7 +36,11 @@ var bool_regex = regexp.MustCompile(`^(true|false)\b`)
 var int_regex = regexp.MustCompile(`^(-?[0-9]+)`)
 var nil_regex = regexp.MustCompile(`^nil\b`)
 var quote_regex = regexp.MustCompile(`^'`)
+var quasiquote_regex = regexp.MustCompile("^`")
+var unquote_regex = regexp.MustCompile("^~")
 var variadic_regex = regexp.MustCompile(`^&`)
+var deref_regex = regexp.MustCompile(`^@`)
+var splice_regex = regexp.MustCompile(`^~@`)
 var meta_regex = regexp.MustCompile(`^\^`)
 var hashmap_open_regex = regexp.MustCompile(`^{`)
 var hashmap_close_regex = regexp.MustCompile(`^}`)
@@ -54,8 +49,12 @@ var vector_close_regex = regexp.MustCompile(`^\]`)
 
 var rules = Parser{
 	"Expr": {
+		Rule{"SpliceUnquote", splice_regex, Push("Expr", 1)},
 		Rule{"List", open_parent_regex, Push("List", -1)},
 		Rule{"Quote", quote_regex, Push("Expr", 1)},
+		Rule{"Deref", deref_regex, Push("Expr", 1)},
+		Rule{"Quasiquote", quasiquote_regex, Push("Expr", 1)},
+		Rule{"Unquote", unquote_regex, Push("Expr", 1)},
 		Rule{"Meta", meta_regex, Push("Expr", 2)},
 		Rule{"Hashmap", hashmap_open_regex, Push("Hashmap", -1)},
 		Rule{"Vector", vector_open_regex, Push("Vector", -1)},
@@ -69,9 +68,13 @@ var rules = Parser{
 		Rule{"Variadic", variadic_regex, ReadRegex()},
 	},
 	"Vector": {
+		Rule{"SpliceUnquote", splice_regex, Push("Expr", 1)},
 		Rule{"List", open_parent_regex, Push("List", -1)},
+		Rule{"Unquote", unquote_regex, Push("Expr", 1)},
 		Rule{"Quote", quote_regex, Push("Expr", 1)},
+		Rule{"Quasiquote", quasiquote_regex, Push("Expr", 1)},
 		Rule{"Meta", meta_regex, Push("Expr", 2)},
+		Rule{"Deref", deref_regex, Push("Expr", 1)},
 		Rule{"Hashmap", hashmap_open_regex, Push("Hashmap", -1)},
 		Rule{"Vector", vector_open_regex, Push("Vector", -1)},
 
@@ -86,11 +89,15 @@ var rules = Parser{
 		Rule{"EndVector", vector_close_regex, Pop()},
 	},
 	"Hashmap": {
+		Rule{"SpliceUnquote", splice_regex, Push("Expr", 1)},
 		Rule{"List", open_parent_regex, Push("List", -1)},
 		Rule{"Quote", quote_regex, Push("Expr", 1)},
 		Rule{"Meta", meta_regex, Push("Expr", 2)},
 		Rule{"Hashmap", hashmap_open_regex, Push("Hashmap", -1)},
+		Rule{"Unquote", unquote_regex, Push("Expr", 1)},
+		Rule{"Quasiquote", quasiquote_regex, Push("Expr", 1)},
 		Rule{"Vector", vector_open_regex, Push("Vector", -1)},
+		Rule{"Deref", deref_regex, Push("Expr", 1)},
 
 		Rule{"Nil", nil_regex, ReadRegex()},
 		Rule{"Bool", bool_regex, ReadRegex()},
@@ -103,10 +110,14 @@ var rules = Parser{
 		Rule{"EndMap", hashmap_close_regex, Pop()},
 	},
 	"List": {
+		Rule{"SpliceUnquote", splice_regex, Push("Expr", 1)},
 		Rule{"List", open_parent_regex, Push("List", -1)},
 		Rule{"Quote", quote_regex, Push("Expr", 1)},
 		Rule{"Meta", meta_regex, Push("Expr", 2)},
+		Rule{"Unquote", unquote_regex, Push("Expr", 1)},
+		Rule{"Quasiquote", quasiquote_regex, Push("Expr", 1)},
 		Rule{"Hashmap", hashmap_open_regex, Push("Hashmap", -1)},
+		Rule{"Deref", deref_regex, Push("Expr", 1)},
 		Rule{"Vector", vector_open_regex, Push("Vector", -1)},
 
 		Rule{"Nil", nil_regex, ReadRegex()},
