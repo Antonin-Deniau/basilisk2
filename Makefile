@@ -2,3 +2,6 @@
 
 test:
 	go run *.go -- ./test_files/shot_test.cl
+
+build:
+	go build -o basilisk *.go

@@ -9,7 +9,7 @@ from subprocess import Popen, STDOUT, PIPE
 from select import select
 
 # Pseudo-TTY and terminal manipulation
-import pty, array, fcntl, termios
+import pty, array, fcntl
 
 IS_PY_3 = sys.version_info[0] == 3
 
@@ -83,32 +83,12 @@ class Runner():
         env['TERM'] = 'dumb'
         env['INPUTRC'] = '/dev/null'
         env['PERL_RL'] = 'false'
-        if no_pty:
-            self.p = Popen(args, bufsize=0,
-                           stdin=PIPE, stdout=PIPE, stderr=STDOUT,
-                           preexec_fn=os.setsid,
-                           env=env)
-            self.stdin = self.p.stdin
-            self.stdout = self.p.stdout
-        else:
-            # provide tty to get 'interactive' readline to work
-            master, slave = pty.openpty()
-
-            # Set terminal size large so that readline will not send
-            # ANSI/VT escape codes when the lines are long.
-            buf = array.array('h', [100, 200, 0, 0])
-            fcntl.ioctl(master, termios.TIOCSWINSZ, buf, True)
-
-            self.p = Popen(args, bufsize=0,
-                           stdin=slave, stdout=slave, stderr=STDOUT,
-                           preexec_fn=os.setsid,
-                           env=env)
-            # Now close slave so that we will get an exception from
-            # read when the child exits early
-            # http://stackoverflow.com/questions/11165521
-            os.close(slave)
-            self.stdin = os.fdopen(master, 'r+b', 0)
-            self.stdout = self.stdin
+        self.p = Popen(args, bufsize=0,
+                       stdin=PIPE, stdout=PIPE, stderr=STDOUT,
+                       preexec_fn=os.setsid,
+                       env=env)
+        self.stdin = self.p.stdin
+        self.stdout = self.p.stdout
 
         #print "started"
         self.buf = ""

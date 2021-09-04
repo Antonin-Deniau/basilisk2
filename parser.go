@@ -26,12 +26,13 @@ type ParserContext struct {
 
 // TO IMPLEMENT
 
+var whitespace_regex = regexp.MustCompile(`^((;[^\n]*)|[\s,\r]+)+`)
+
 var string_regex = regexp.MustCompile(`^"((:?\\.|[^"\\])*)"`)
 var name_regex = regexp.MustCompile("^([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
 var open_parent_regex = regexp.MustCompile(`^\(`)
 var close_parent_regex = regexp.MustCompile(`^\)`)
 var keyword_regex = regexp.MustCompile("^:([^\"^.@~`\\[\\]:{}'0-9\\s,();][^\"^@~`\\[\\]:{}\\s();]*)")
-var whitespace_regex = regexp.MustCompile(`^((;[^\n]*$)|[\s,]+)`)
 var bool_regex = regexp.MustCompile(`^(true|false)\b`)
 var int_regex = regexp.MustCompile(`^(-?[0-9]+)`)
 var nil_regex = regexp.MustCompile(`^nil\b`)
@@ -263,7 +264,7 @@ func Parse(str_input string) (*BType, error) {
 	ctx := InitParserContext(str_input)
 
 	parse_err := ParseExpr(ctx)
-	DisplayNode(ctx.Ast, 2)
+	//DisplayNode(ctx.Ast, 2)
 
 	if parse_err != nil {
 		return nil, parse_err

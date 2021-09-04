@@ -67,7 +67,6 @@ func main() {
 		}
 
 		fmt.Printf("BType expression: %+v\n", sb.String())
-
 	} else {
 		// LoadStr('(println (str "Mal [" *host-language* "]"))', replEnv)
 
