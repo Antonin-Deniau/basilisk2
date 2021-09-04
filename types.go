@@ -13,6 +13,13 @@ type BInt struct {
 	Value int64
 }
 
+type BVariadic struct {}
+
+type BHashmap struct {
+	Meta *BType
+	Value map[*BType]*BType
+}
+
 type BList struct {
 	Meta *BType
 	Value []*BType

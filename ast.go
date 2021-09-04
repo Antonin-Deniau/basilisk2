@@ -59,6 +59,45 @@ func ProcessList(node *Node) (BType, error) {
 	return list, nil
 }
 
+
+func ProcessHashmap(node *Node) (BType, error) {
+	if len(node.Childs) % 2 != 0 {
+		return nil, errors.New("Hashmap must contain a pair number of items")
+	}
+
+	list := BList{Value: make([]*BType, 0)}
+	index := 0
+	for _, child := range node.Childs {
+		res_node, err := ProcessNode(child)
+		if err != nil {
+			return nil, err
+		}
+		if res_node == nil {
+			continue
+		}
+
+		if index % 2 == 0 {
+			_, is_keyword := res_node.(BKeyword)
+			_, is_string := res_node.(BString)
+
+			if (is_keyword == false && is_string == false) {
+				return nil, errors.New("Hashmap keys must be keyword or string")
+			}
+		}
+
+		index += 1
+		list.Value = append(list.Value, &res_node)
+	}
+
+	hmap := BHashmap{Value: make(map[*BType]*BType, 0)}
+
+	for i := 0; i < len(list.Value); i += 2 {
+		hmap.Value[list.Value[i]] = list.Value[i+1]
+	}
+
+	return hmap, nil
+}
+
 func ProcessString(node *Node) (BType, error) {
 	var sb strings.Builder
 	Unescape(&sb, node.Value)
@@ -70,6 +109,10 @@ func ProcessString(node *Node) (BType, error) {
 
 func ProcessName(node *Node) (BType, error) {
 	return BName{Value: node.Value}, nil
+}
+
+func ProcessVariadic(node *Node) (BType, error) {
+	return BVariadic{}, nil
 }
 
 func ProcessInt(node *Node) (BType, error) {
@@ -146,6 +189,8 @@ func ProcessNode(node *Node) (BType, error) {
 		return ProcessBool(node)
 	case "List":
 		return ProcessList(node)
+	case "Hashmap":
+		return ProcessHashmap(node)
 	case "String":
 		return ProcessString(node)
 	default:

@@ -25,6 +25,32 @@ func DisplayBList(node *BList, sb *strings.Builder, readably bool) error {
 	return nil
 }
 
+func DisplayBHashmap(node *BHashmap, sb *strings.Builder, readably bool) error {
+	sb.WriteRune('{')
+	end := len(node.Value) - 1
+	i := 0
+	for key, val := range node.Value {
+		err_key := Display(key, sb, readably)
+		if err_key != nil {
+			return err_key
+		}
+		sb.WriteRune(' ')
+
+		err_val := Display(val, sb, readably)
+		if err_val != nil {
+			return err_val
+		}
+
+		if i != end {
+			sb.WriteRune(' ')
+		}
+		i += 1
+	}
+	sb.WriteRune('}')
+
+	return nil
+}
+
 func DisplayBName(node *BName, sb *strings.Builder, readably bool) error {
 	sb.WriteString(node.Value)
 	return nil
@@ -79,10 +105,15 @@ func Display(node *BType, sb *strings.Builder, readably bool) error {
 		return DisplayBList(&v, sb, readably)
 	case BName:
 		return DisplayBName(&v, sb, readably)
+	case BHashmap:
+		return DisplayBHashmap(&v, sb, readably)
 	case BKeyword:
 		return DisplayBKeyword(&v, sb, readably)
 	case BString:
 		return DisplayBString(&v, sb, readably)
+	case BVariadic:
+		sb.WriteRune('&')
+		return nil
 	default:
 		return errors.New(fmt.Sprintf("Unable to find type for btype %+v\n", *node ))
 	}
