@@ -47,3 +47,8 @@ type BKeyword struct {
 
 
 type BNil struct {}
+
+
+type BException struct {
+	Value string
+}
